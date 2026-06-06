@@ -15,9 +15,14 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
+            $table->string('google_id')->nullable()->unique();
+            $table->string('avatar_url')->nullable();
+            $table->integer('score')->default(0);
+            $table->string('level')->default('beginner');
+            $table->string('fcm_token')->nullable();
+            $table->boolean('onboarding_done')->default(false);
+            $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });
 
