@@ -26,6 +26,16 @@ services:
     networks:
       - api_net
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: api_cloudflared
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+    networks:
+      - api_net
+    restart: unless-stopped
+
   db:
     image: mysql:8.0
     container_name: api_db
