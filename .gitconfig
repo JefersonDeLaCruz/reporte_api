@@ -1,0 +1,7 @@
+[core]
+    pager = cat
+    editor = /mnt/almacenamiento/proyectos/laravel_api/.devbin/nano
+[advice]
+    detachedHead = false
+[safe]
+    directory = /mnt/almacenamiento/proyectos/laravel_api

@@ -74,7 +74,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'token' => 'Bearer ' . $token,
+            'token' => $token,
             'user' => $user,
         ]);
     }
@@ -127,7 +127,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'token' => 'Bearer ' . $token,
+                'token' => $token,
                 'user' => $user,
             ]);
         } catch (ValidationException $e) {
