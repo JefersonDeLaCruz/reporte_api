@@ -40,8 +40,9 @@ class ReportVoteController extends Controller
 
             $column = $data['type'] === 'confirm' ? 'votes_confirm' : 'votes_resolve';
 
-            DB::transaction(function () use ($report, $request, $data, $column) {
-                ReportVote::create([
+            $vote = null;
+            DB::transaction(function () use ($report, $request, $data, $column, &$vote) {
+                $vote = ReportVote::create([
                     'report_id' => $report->id,
                     'user_id' => $request->user()->id,
                     'type' => $data['type'],
@@ -50,10 +51,19 @@ class ReportVoteController extends Controller
                 $report->increment($column);
             });
 
+            $report->refresh();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Voto registrado',
-                'report' => $report->fresh(),
+                'data' => [
+                    'type' => $vote->type,
+                    'user_id' => $vote->user_id,
+                    'report_id' => $vote->report_id,
+                    'votes_confirm' => $report->votes_confirm,
+                    'votes_resolve' => $report->votes_resolve,
+                    'created_at' => $vote->created_at->toIso8601String(),
+                ],
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([

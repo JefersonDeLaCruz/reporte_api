@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Report;
+use App\Models\ReportVote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -25,13 +26,45 @@ class ReportController extends Controller
         ]);
     }
 
-    public function show(Report $report)
+    public function show(Request $request, Report $report)
     {
         $report->load(['user:id,name,avatar_url', 'category']);
 
+        $userVote = null;
+        $userVotedAt = null;
+
+        if ($request->user()) {
+            $vote = ReportVote::where('report_id', $report->id)
+                ->where('user_id', $request->user()->id)
+                ->first();
+
+            if ($vote) {
+                $userVote = $vote->type;
+                $userVotedAt = $vote->created_at->toIso8601String();
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'report' => $report,
+            'report' => [
+                'id' => $report->id,
+                'latitude' => $report->latitude,
+                'longitude' => $report->longitude,
+                'status' => $report->status,
+                'description' => $report->description,
+                'user_id' => $report->user_id,
+                'photo_path' => $report->photo_path,
+                'category' => $report->category,
+                'user' => $report->user,
+                'votes' => [
+                    'confirm' => $report->votes_confirm,
+                    'resolve' => $report->votes_resolve,
+                ],
+                'user_vote' => $userVote,
+                'user_voted_at' => $userVotedAt,
+                'created_at' => $report->created_at->toIso8601String(),
+                'updated_at' => $report->updated_at->toIso8601String(),
+            ],
         ]);
     }
 

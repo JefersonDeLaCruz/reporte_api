@@ -150,7 +150,15 @@
 | Estado      | [x] lista                       |
 
 ### Ruta: [GET] /reports/{id}
-| Auth | No | Respuesta `{ success, report }` | [x] lista |
+
+| Campo        | Detalle                         |
+|-------------|---------------------------------|
+| Método      | GET                              |
+| Auth        | No (pero si hay Bearer, incluye `user_vote` y `user_voted_at`) |
+| Body        | N/A                             |
+| Respuesta   | `{ success, report: { id, latitude, longitude, status, description, user_id, photo_path, category, user, votes: { confirm, resolve }, user_vote, user_voted_at, created_at, updated_at } }` |
+| Estado      | [x] lista                       |
+| Notas       | `user_vote`: null si no ha votado, o "confirm"/"resolve" si votó. `user_voted_at`: timestamp ISO de cuándo votó (útil para ventana de 5 min editable) |
 
 ### Ruta: [POST] /reports
 
@@ -187,9 +195,9 @@
 | Método      | POST                             |
 | Auth        | Bearer Token                    |
 | Body        | `{ type: confirm\|resolve, latitude, longitude }` |
-| Respuesta   | `{ success, message, report }` o `{ success:false, distance_meters }` si fuera de rango |
-| Estado      | [x] lista                       |
-| Notas       | Rechaza si distancia (Haversine) > 500m. Bloqueo optimista vía unique(report_id,user_id,type); choque de unicidad → 409 "Ya votaste" |
+| Respuesta   | Success (201): `{ success: true, message: "Voto registrado", data: { type, user_id, report_id, votes_confirm, votes_resolve, created_at } }`. Error: `{ success: false, message, distance_meters? }` si fuera de rango (422) o voto duplicado (409) |
+| Estado      | [x] implementada ✅ (2026-06-08)                       |
+| Notas       | Rechaza si distancia (Haversine) > 500m → 422. Bloqueo optimista vía unique(report_id,user_id,type); choque de unicidad → 409 "Ya votaste". Cliente usa `data` para actualizar contadores UI inmediatamente. |
 
 ### Ruta: [DELETE] /reports/{id}/votes/{type}
 | Auth | Bearer | retira voto propio (confirm o resolve) y decrementa contador | [x] lista |
