@@ -154,11 +154,11 @@
 | Campo        | Detalle                         |
 |-------------|---------------------------------|
 | Método      | GET                              |
-| Auth        | No (pero si hay Bearer, incluye `user_vote` y `user_voted_at`) |
+| Auth        | No (pero si hay Bearer, incluye `user_vote` y `user_voted_at` del usuario autenticado) |
 | Body        | N/A                             |
 | Respuesta   | `{ success, report: { id, latitude, longitude, status, description, user_id, photo_path, category, user, votes: { confirm, resolve }, user_vote, user_voted_at, created_at, updated_at } }` |
-| Estado      | [x] lista                       |
-| Notas       | `user_vote`: null si no ha votado, o "confirm"/"resolve" si votó. `user_voted_at`: timestamp ISO de cuándo votó (útil para ventana de 5 min editable) |
+| Estado      | [x] implementada ✅ (2026-06-08)                       |
+| Notas       | `user_vote`: null si no ha votado, o "confirm"/"resolve" si votó. `user_voted_at`: timestamp ISO de cuándo votó (útil para ventana de 5 min editable). Autentica automáticamente desde Bearer token sin requerir middleware auth |
 
 ### Ruta: [POST] /reports
 

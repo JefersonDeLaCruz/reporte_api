@@ -33,9 +33,12 @@ class ReportController extends Controller
         $userVote = null;
         $userVotedAt = null;
 
-        if ($request->user()) {
+        // Try to authenticate if Bearer token is provided
+        $user = $request->user() ?? $this->authenticateFromToken($request);
+
+        if ($user) {
             $vote = ReportVote::where('report_id', $report->id)
-                ->where('user_id', $request->user()->id)
+                ->where('user_id', $user->id)
                 ->first();
 
             if ($vote) {
@@ -207,5 +210,20 @@ class ReportController extends Controller
                 'message' => 'No autorizado para modificar este reporte',
             ], 403));
         }
+    }
+
+    private function authenticateFromToken(Request $request)
+    {
+        if (!$request->bearerToken()) {
+            return null;
+        }
+
+        $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->bearerToken());
+
+        if (!$token) {
+            return null;
+        }
+
+        return $token->tokenable;
     }
 }
