@@ -36,6 +36,19 @@ services:
       - api_net
     restart: unless-stopped
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: api_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: apiuser
+      PMA_PASSWORD: apipass
+    depends_on:
+      - db
+    networks:
+      - api_net
+
   db:
     image: mysql:8.0
     container_name: api_db
