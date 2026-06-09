@@ -1,209 +1,471 @@
-# API Documentation
+# 📚 API Documentation
 
-## [2026-06-06] AuthController — rutas de autenticación
+**Base URL:** `http://localhost:8080/api` (desarrollo) | `https://api.manuelmv.net/api` (producción)
 
-### Archivos tocados
-- `src/app/Http/Controllers/API/AuthController.php` — implementado register, login, getAllUser, logout
-- `src/routes/api.php` — creado con rutas auth públicas y protegidas
-- `src/bootstrap/app.php` — registrado api.php en withRouting
-- `src/app/Models/User.php` — agregado HasApiTokens trait
+**Auth Method:** `Bearer Token` (Laravel Sanctum)
 
-### Dependencias
-- `laravel/sanctum ^4.3` — instalado vía composer, migration publicada y ejecutada
+**Última actualización:** 2026-06-09
 
 ---
 
-### Ruta: POST /api/register
+## 🔑 Autenticación
 
-| Campo     | Detalle                                                    |
-|-----------|------------------------------------------------------------|
-| Método    | POST                                                       |
-| Auth      | No                                                         |
-| Body      | `{ name: string, email: string, password: string, password_confirmation: string }` |
-| Respuesta | `{ success: bool, message: string, token: string, user: object }` |
-| Estado    | [x] lista                                                  |
+Todos los endpoints protegidos requieren un token Bearer en el header:
 
----
+```
+Authorization: Bearer {token}
+```
 
-### Ruta: POST /api/login
+### Obtener Token
 
-| Campo     | Detalle                                                    |
-|-----------|------------------------------------------------------------|
-| Método    | POST                                                       |
-| Auth      | No                                                         |
-| Body      | `{ email: string, password: string }`                      |
-| Respuesta | `{ token: string (Bearer ...), user: object }`             |
-| Estado    | [x] lista                                                  |
+Usar `/register` o `/login` para obtener un token. El token se incluye en la respuesta y debe ser guardado por el cliente.
 
 ---
 
-### Ruta: POST /api/logout
+## 📋 Índice de Endpoints
 
-| Campo     | Detalle                          |
-|-----------|----------------------------------|
-| Método    | POST                             |
-| Auth      | Bearer Token (auth:sanctum)      |
-| Body      | N/A                              |
-| Respuesta | `{ success: bool, message: string }` |
-| Estado    | [x] lista                        |
+- [🔐 Autenticación](#autenticación)
+- [📁 Categorías](#categorías)
+- [📍 Reportes](#reportes)
+- [🗳️ Sistema de Votos](#sistema-de-votos)
 
 ---
 
-### Ruta: GET /api/users
+## 🔐 Autenticación
 
-| Campo     | Detalle                                           |
-|-----------|---------------------------------------------------|
-| Método    | GET                                               |
-| Auth      | Bearer Token (auth:sanctum)                       |
-| Body      | N/A                                               |
-| Respuesta | `{ success: bool, users: [{ id, name, email, created_at }] }` |
-| Estado    | [x] lista                                         |
+### POST /register
 
----
+Registrar un nuevo usuario.
 
-## [2026-06-06] Google Auth + endpoint /me
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | No |
+| **Body** | `{ name: string, email: string, password: string, password_confirmation: string }` |
+| **Respuesta** | `201 Created` — `{ success: true, message: "...", token: "...", user: {...} }` |
+| **Status** | [x] Implementado |
 
-### Archivos tocados
-- `src/app/Http/Controllers/API/AuthController.php` — agregado googleLogin, me
-- `src/routes/api.php` — agregado POST /auth/google, GET /me
-- `src/config/services.php` — agregado google.client_id
-- `src/.env` / `.env.example` — agregado GOOGLE_CLIENT_ID=
-
-### Dependencias
-- `google/apiclient ^2.19` — instalado vía composer
-
----
-
-### Ruta: POST /api/auth/google
-
-| Campo     | Detalle                                                              |
-|-----------|----------------------------------------------------------------------|
-| Método    | POST                                                                 |
-| Auth      | No                                                                   |
-| Body      | `{ id_token: string }` — JWT de Google del cliente móvil            |
-| Respuesta | `{ success: bool, token: string (Bearer ...), user: object }`        |
-| Estado    | [x] lista                                                            |
-| Notas     | Verifica token con Google API. Crea user si no existe, o actualiza google_id/avatar si ya tiene cuenta con ese email |
+**Ejemplo de request:**
+```bash
+curl -X POST http://localhost:8080/api/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Juan Pérez",
+    "email": "juan@example.com",
+    "password": "password123",
+    "password_confirmation": "password123"
+  }'
+```
 
 ---
 
-### Ruta: GET /api/me
+### POST /login
 
-| Campo     | Detalle                                      |
-|-----------|----------------------------------------------|
-| Método    | GET                                          |
-| Auth      | Bearer Token (auth:sanctum)                  |
-| Body      | N/A                                          |
-| Respuesta | `{ success: bool, user: object }`            |
-| Estado    | [x] lista                                    |
+Iniciar sesión con email y contraseña.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | No |
+| **Body** | `{ email: string, password: string }` |
+| **Respuesta** | `200 OK` — `{ success: true, token: "...", user: {...} }` |
+| **Status** | [x] Implementado |
 
 ---
 
-### TODOs / Próximos pasos
-- [ ] Poner GOOGLE_CLIENT_ID real en .env (obtener desde Google Cloud Console)
-- [ ] Agregar rate limiting a /login y /auth/google
-- [ ] Proteger /users con policy (solo admin)
+### POST /auth/google
 
-## [2026-06-08] Endpoints de categorías, reportes y motor de votos
+Login/registro usando Google OAuth (id_token).
 
-### Archivos tocados
-- `app/Models/Category.php`, `app/Models/Report.php`, `app/Models/ReportVote.php` — modelos + relaciones + Haversine
-- `database/migrations/2026_06_08_000003_create_report_votes_table.php` — tabla report_votes (unique report_id+user_id+type)
-- `app/Http/Controllers/API/CategoryController.php` — CRUD categorías
-- `app/Http/Controllers/API/ReportController.php` — CRUD reportes + foto + ciclo de estados
-- `app/Http/Controllers/API/ReportVoteController.php` — motor de votos (radio 500m, bloqueo optimista vía unique constraint)
-- `routes/api.php` — rutas registradas
-- `database/factories/CategoryFactory.php`, `database/factories/ReportFactory.php` — datos de prueba (puntos San Miguel, El Salvador ~13.4833,-88.1833)
-- `database/seeders/CategorySeeder.php`, `database/seeders/ReportSeeder.php` — seeders, llamados desde DatabaseSeeder
-- `database/factories/UserFactory.php` — quitado `remember_token` (columna no existe en tabla users, rompía el seed)
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | No |
+| **Body** | `{ id_token: string (JWT de Google) }` |
+| **Respuesta** | `200 OK` — `{ success: true, token: "...", user: {...} }` |
+| **Status** | [x] Implementado |
+| **Notas** | Verifica token con Google API. Crea usuario si no existe, actualiza google_id/avatar si ya tiene email registrado |
 
-### Ruta: [GET] /categories
+---
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | GET                              |
-| Auth        | No                              |
-| Body        | N/A (query: `active_only=1`)    |
-| Respuesta   | `{ success, categories[] }`     |
-| Estado      | [x] lista                       |
+### POST /logout
 
-### Ruta: [GET] /categories/{id}
-| Auth | No | Respuesta `{ success, category }` | [x] lista |
+Cerrar sesión (revocar token).
 
-### Ruta: [POST] /categories
-| Auth | Bearer | Body `{ name, slug, icon, active? }` | Respuesta `{ success, message, category }` | [x] lista |
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Logged out successfully" }` |
+| **Status** | [x] Implementado |
 
-### Ruta: [PUT] /categories/{id}
-| Auth | Bearer | Body `{ name?, slug?, icon?, active? }` | [x] lista |
+---
 
-### Ruta: [DELETE] /categories/{id}
-| Auth | Bearer | [x] lista |
+### GET /me
 
-### Ruta: [GET] /reports
+Obtener datos del usuario autenticado.
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | GET                              |
-| Auth        | No                              |
-| Body        | N/A (query: `status, category_id, per_page`) |
-| Respuesta   | `{ success, reports: paginator }` con user y category cargados |
-| Estado      | [x] lista                       |
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, user: { id, name, email, avatar_url, score, level, ... } }` |
+| **Status** | [x] Implementado |
 
-### Ruta: [GET] /reports/{id}
+---
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | GET                              |
-| Auth        | No (pero si hay Bearer, incluye `user_vote` y `user_voted_at` del usuario autenticado) |
-| Body        | N/A                             |
-| Respuesta   | `{ success, report: { id, latitude, longitude, status, description, user_id, photo_path, category, user, votes: { confirm, resolve }, user_vote, user_voted_at, created_at, updated_at } }` |
-| Estado      | [x] implementada ✅ (2026-06-08)                       |
-| Notas       | `user_vote`: null si no ha votado, o "confirm"/"resolve" si votó. `user_voted_at`: timestamp ISO de cuándo votó (útil para ventana de 5 min editable). Autentica automáticamente desde Bearer token sin requerir middleware auth |
+### GET /users
 
-### Ruta: [POST] /reports
+Listar todos los usuarios (admin).
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | POST                             |
-| Auth        | Bearer Token                    |
-| Body        | `multipart/form-data { category_id, latitude, longitude, description, photo? }` |
-| Respuesta   | `{ success, message, report }`  |
-| Estado      | [x] lista                       |
-| Notas       | foto guardada en disk `public/reports`, status inicial `pending` |
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | Sí (Bearer Token) |
+| **Query** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, users: [...] }` |
+| **Status** | [x] Implementado |
 
-### Ruta: [PUT] /reports/{id}
-| Auth | Bearer (solo dueño) | Body `{ category_id?, description?, photo? }` | [x] lista |
+---
 
-### Ruta: [DELETE] /reports/{id}
-| Auth | Bearer (solo dueño) | borra foto del disco también | [x] lista |
+## 📁 Categorías
 
-### Ruta: [PATCH] /reports/{id}/status
+Las categorías agrupan los tipos de reportes (ej: Baches, Alumbrado público, Agua, etc.).
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | PATCH                            |
-| Auth        | Bearer Token                    |
-| Body        | `{ status: pending\|verified\|resolved\|archived }` |
-| Respuesta   | `{ success, message, report }`  |
-| Estado      | [x] lista (ciclo manual; automatización de 4 estados queda pendiente) |
-| Notas       | Cada cambio de estado actualiza `status_changed_at` (timestamp) en el reporte, además del campo específico (`verified_at`/`resolved_at`/`archived_at`) |
+### GET /categories
 
-### Ruta: [POST] /reports/{id}/votes
+Listar todas las categorías disponibles.
 
-| Campo        | Detalle                         |
-|-------------|---------------------------------|
-| Método      | POST                             |
-| Auth        | Bearer Token                    |
-| Body        | `{ type: confirm\|resolve, latitude, longitude }` |
-| Respuesta   | Success (201): `{ success: true, message: "Voto registrado", data: { type, user_id, report_id, votes_confirm, votes_resolve, created_at } }`. Error: `{ success: false, message, distance_meters? }` si fuera de rango (422) o voto duplicado (409) |
-| Estado      | [x] implementada ✅ (2026-06-08)                       |
-| Notas       | Rechaza si distancia (Haversine) > 500m → 422. Bloqueo optimista vía unique(report_id,user_id,type); choque de unicidad → 409 "Ya votaste". Cliente usa `data` para actualizar contadores UI inmediatamente. |
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | No |
+| **Query** | `active_only?: boolean` — filtrar solo categorías activas |
+| **Respuesta** | `200 OK` — `{ success: true, categories: [...] }` |
+| **Status** | [x] Implementado |
 
-### Ruta: [DELETE] /reports/{id}/votes/{type}
-| Auth | Bearer | retira voto propio (confirm o resolve) y decrementa contador | [x] lista |
+---
 
-### TODOs / Próximos pasos
-- [ ] Automatizar ciclo de vida de 4 estados (ej. job que pasa a "resolved" tras N votos_resolve, archiva tras X días)
-- [ ] FCM Dispatcher: disparar push cuando reporte cambia de estado o entra nuevo reporte cerca (300m)
-- [ ] Motor de scoring: sumar puntos a `users.score` al crear reporte verificado o votar
-- [ ] Tests de feature para ReportController y ReportVoteController (incluyendo caso fuera de 500m y voto duplicado)
+### GET /categories/{id}
+
+Obtener detalle de una categoría específica.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | No |
+| **Respuesta** | `200 OK` — `{ success: true, category: { id, name, slug, icon, active, created_at, updated_at } }` |
+| **Status** | [x] Implementado |
+
+---
+
+### POST /categories
+
+Crear nueva categoría.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ name: string, slug: string (unique), icon: string, active?: boolean (default: true) }` |
+| **Respuesta** | `201 Created` — `{ success: true, message: "...", category: {...} }` |
+| **Status** | [x] Implementado |
+
+---
+
+### PUT /categories/{id}
+
+Actualizar una categoría.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | PUT |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ name?: string, slug?: string, icon?: string, active?: boolean }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "...", category: {...} }` |
+| **Status** | [x] Implementado |
+
+---
+
+### DELETE /categories/{id}
+
+Eliminar una categoría.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | DELETE |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Category deleted" }` |
+| **Status** | [x] Implementado |
+
+---
+
+## 📍 Reportes
+
+Los reportes son los problemas/incidentes que los usuarios reportan en la plataforma (ej: bache en calle X, falla de alumbrado en zona Y).
+
+### GET /reports
+
+Listar reportes con paginación.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | No |
+| **Query** | `status?: string` (pending/verified/resolved/archived), `category_id?: integer`, `per_page?: integer (default: 15)` |
+| **Respuesta** | `200 OK` — `{ success: true, reports: { current_page, data: [...], total, per_page, ... } }` |
+| **Status** | [x] Implementado |
+| **Datos incluidos** | Cada reporte incluye relaciones con `user` y `category` |
+
+---
+
+### GET /reports/{id}
+
+Obtener detalle completo de un reporte con información de votos.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | Opcional (detecta token Bearer automáticamente) |
+| **Respuesta** | `200 OK` — `{ success: true, report: {...} }` |
+| **Status** | [x] Implementado ✅ (2026-06-09) |
+| **Campos importantes** | Ver tabla de respuesta abajo |
+
+**Estructura de respuesta:**
+
+```json
+{
+  "success": true,
+  "report": {
+    "id": 25,
+    "latitude": "13.4950000",
+    "longitude": "-88.1800000",
+    "status": "pending",
+    "description": "Descripción del problema",
+    "user_id": 9,
+    "photo_path": "reports/xyz.jpg",
+    "category": {
+      "id": 1,
+      "name": "Bache",
+      "slug": "bache",
+      "icon": "pothole",
+      "active": true
+    },
+    "user": {
+      "id": 9,
+      "name": "Creador",
+      "avatar_url": "..."
+    },
+    "votes": {
+      "confirm": 1,
+      "resolve": 0
+    },
+    "user_vote": "confirm",
+    "user_voted_at": "2026-06-09T04:42:10+00:00",
+    "created_at": "2026-06-09T04:39:34+00:00",
+    "updated_at": "2026-06-09T04:39:34+00:00"
+  }
+}
+```
+
+**Campos especiales:**
+- `user_vote`: `null` si no ha votado, `"confirm"` o `"resolve"` si votó
+- `user_voted_at`: Timestamp ISO de cuándo votó (útil para ventana de 5 min editable)
+- `votes`: Desglose de contadores de votos
+
+---
+
+### POST /reports
+
+Crear nuevo reporte.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ category_id: integer (required), latitude: numeric, longitude: numeric, description: string (max 500), photo?: File (image, max 5MB) }` |
+| **Content-Type** | `multipart/form-data` (si incluye foto) o `application/json` |
+| **Respuesta** | `201 Created` — `{ success: true, message: "Reporte creado", report: {...} }` |
+| **Status** | [x] Implementado |
+| **Notas** | Status inicial: `pending`. Foto se guarda en `/storage/reports/` |
+
+---
+
+### PUT /reports/{id}
+
+Actualizar un reporte (solo el dueño).
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | PUT |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ category_id?: integer, description?: string, photo?: File }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Reporte actualizado", report: {...} }` |
+| **Status** | [x] Implementado |
+| **Validación** | Solo el usuario que creó el reporte puede modificarlo (401 si no es dueño) |
+
+---
+
+### DELETE /reports/{id}
+
+Eliminar un reporte (solo el dueño).
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | DELETE |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Reporte eliminado" }` |
+| **Status** | [x] Implementado |
+| **Notas** | Elimina también la foto del reporte del disco |
+
+---
+
+### PATCH /reports/{id}/status
+
+Cambiar estado de un reporte (ciclo de vida: pending → verified → resolved → archived).
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | PATCH |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ status: "pending" | "verified" | "resolved" | "archived" }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Estado actualizado", report: {...} }` |
+| **Status** | [x] Implementado |
+| **Timestamps** | Actualiza `status_changed_at` y el timestamp específico (`verified_at`, `resolved_at`, `archived_at`) |
+| **TODOs** | [ ] Automatizar transiciones basadas en votos |
+
+---
+
+## 🗳️ Sistema de Votos
+
+Los usuarios pueden votar reportes para confirmar que el problema existe (confirm) o que fue resuelto (resolve).
+
+### POST /reports/{id}/votes
+
+Registrar un voto en un reporte.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ type: "confirm" | "resolve", latitude: numeric, longitude: numeric }` |
+| **Respuesta (201)** | `{ success: true, message: "Voto registrado", data: { type, user_id, report_id, votes_confirm, votes_resolve, created_at } }` |
+| **Status** | [x] Implementado ✅ (2026-06-09) |
+
+**Validaciones:**
+- **422 Unprocessable Entity** — Usuario debe estar a <500m del reporte (validación Haversine)
+- **409 Conflict** — Usuario ya votó ese reporte con ese tipo
+
+**Ejemplo de respuesta exitosa:**
+
+```json
+{
+  "success": true,
+  "message": "Voto registrado",
+  "data": {
+    "type": "confirm",
+    "user_id": 10,
+    "report_id": 25,
+    "votes_confirm": 1,
+    "votes_resolve": 0,
+    "created_at": "2026-06-09T04:42:10+00:00"
+  }
+}
+```
+
+**Flujo esperado del cliente Android:**
+1. Usuario vota → POST /reports/{id}/votes
+2. Cliente recibe `data` con conteos actualizados
+3. Cliente actualiza UI inmediatamente con `votes_confirm` y `votes_resolve`
+4. Cliente guarda `user_vote` y `user_voted_at` localmente (opcional)
+5. Cliente puede calcular ventana de 5 min desde `user_voted_at`
+
+---
+
+### DELETE /reports/{id}/votes/{type}
+
+Retirar un voto propio.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | DELETE |
+| **Auth** | Sí (Bearer Token) |
+| **Path Parameters** | `type`: "confirm" o "resolve" |
+| **Body** | N/A |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Voto retirado", report: {...} }` |
+| **Status** | [x] Implementado |
+| **Efecto** | Decrementa el contador `votes_confirm` o `votes_resolve` |
+
+---
+
+## 📊 Status Codes
+
+| Code | Significado | Casos |
+|------|-------------|-------|
+| `200 OK` | Operación exitosa (GET, PUT, DELETE) | Consulta, actualización o eliminación exitosa |
+| `201 Created` | Recurso creado exitosamente | POST de nuevo reporte, categoría, voto |
+| `400 Bad Request` | Request malformado | JSON inválido, parámetros faltantes |
+| `401 Unauthorized` | Token no válido o ausente | Token expirado, inválido o ausente en ruta protegida |
+| `403 Forbidden` | Usuario no autorizado | Intenta modificar/eliminar recurso que no es suyo |
+| `404 Not Found` | Recurso no encontrado | ID de recurso inexistente |
+| `409 Conflict` | Violación de constraint unique | Voto duplicado, email duplicado |
+| `422 Unprocessable Entity` | Datos no válidos | Usuario fuera de 500m para votar, validación de campos |
+| `500 Internal Server Error` | Error del servidor | Error no manejado |
+
+---
+
+## 🔄 Flujos Comunes
+
+### Crear Reporte y Votarlo
+
+```bash
+# 1. Crear reporte
+POST /reports
+Body: { category_id: 1, latitude: 13.495, longitude: -88.180, description: "..." }
+Response: { report: { id: 25, ... } }
+
+# 2. Votar el reporte (como otro usuario o mismo)
+POST /reports/25/votes
+Body: { type: "confirm", latitude: 13.495, longitude: -88.180 }
+Response: { data: { votes_confirm: 1, votes_resolve: 0, ... } }
+
+# 3. Consultar reporte actualizado
+GET /reports/25
+Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", ... } }
+```
+
+---
+
+## 📌 Notas Importantes
+
+- **Autenticación opcional en GET /reports/{id}:** El endpoint retorna `user_vote` y `user_voted_at` si se envía Bearer token, pero funciona sin él
+- **Validación de distancia:** La validación Haversine es exacta a nivel de metros (máximo 500m)
+- **Sincronización de votos:** El cliente debe refrescar el reporte después de votar para obtener conteos actualizados
+- **Ventana de edición:** El cliente puede usar `user_voted_at` para implementar ventana de edición de 5 minutos
+- **Timestamps ISO 8601:** Todos los timestamps están en formato ISO 8601 con timezone UTC
+
+---
+
+## 🛠️ Desarrollo
+
+**Última actualización del código:** 2026-06-09
+
+**Commits recientes:**
+- `1510cc5` - fix: autenticación opcional en GET /reports/{id}
+- `318d0cb` - feat: sistema de votos completado para cliente Android
+- `6e89121` - feat: creacion del reporte y endpoints de doc
+
+**TODOs pendientes:**
+- [ ] Automatizar transiciones de estado basadas en votos
+- [ ] FCM Push Notifications (nuevo reporte cerca, cambio de estado)
+- [ ] Sistema de scoring (puntos por reportes verificados)
+- [ ] Tests de feature completos
+- [ ] Rate limiting en /login y /auth/google
+
+---
+
+**Endpoint de documentación automática:** `GET /api/docs` (retorna JSON con estructura de endpoints)
