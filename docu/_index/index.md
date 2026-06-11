@@ -8,3 +8,4 @@
 - [2026-06-08] [api] — endpoints CRUD de categorías/reportes + motor de votos (radio 500m, bloqueo optimista) + seeders con datos de prueba en San Miguel, El Salvador
 - [2026-06-08] [db][api] — reports: agregada columna status_changed_at, actualizada en cada cambio de estado vía PATCH /reports/{id}/status
 - [2026-06-08] [api] — sistema de votos completado: POST /reports/{id}/votes retorna `data` con conteos, GET /reports/{id} incluye `user_vote` y `user_voted_at` para cliente Android
+- [2026-06-11] [api] — endpoints de "Mi Perfil": PUT /me (actualizar nombre), POST /me/avatar (subir foto), GET /me/reports y GET /me/votes (paginados)

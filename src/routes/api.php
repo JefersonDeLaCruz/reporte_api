@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\DocsController;
+use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\ReportVoteController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,10 @@ Route::get('/reports/{report}', [ReportController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::put('/me', [ProfileController::class, 'update']);
+    Route::post('/me/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::get('/me/reports', [ProfileController::class, 'reports']);
+    Route::get('/me/votes', [ProfileController::class, 'votes']);
     Route::get('/users', [AuthController::class, 'getAllUser']);
 
     Route::post('/categories', [CategoryController::class, 'store']);

@@ -4,7 +4,7 @@
 
 **Auth Method:** `Bearer Token` (Laravel Sanctum)
 
-**Última actualización:** 2026-06-09
+**Última actualización:** 2026-06-11
 
 ---
 
@@ -25,6 +25,7 @@ Usar `/register` o `/login` para obtener un token. El token se incluye en la res
 ## 📋 Índice de Endpoints
 
 - [🔐 Autenticación](#autenticación)
+- [👤 Perfil](#perfil)
 - [📁 Categorías](#categorías)
 - [📍 Reportes](#reportes)
 - [🗳️ Sistema de Votos](#sistema-de-votos)
@@ -113,6 +114,7 @@ Obtener datos del usuario autenticado.
 | **Body** | N/A |
 | **Respuesta** | `200 OK` — `{ success: true, user: { id, name, email, avatar_url, score, level, ... } }` |
 | **Status** | [x] Implementado |
+| **Notas** | `score` y `level` son columnas existentes en `users` y ya viajan en el modelo, sin necesidad de cambios adicionales |
 
 ---
 
@@ -127,6 +129,70 @@ Listar todos los usuarios (admin).
 | **Query** | N/A |
 | **Respuesta** | `200 OK` — `{ success: true, users: [...] }` |
 | **Status** | [x] Implementado |
+
+---
+
+## 👤 Perfil
+
+Endpoints para que el usuario autenticado gestione su propio perfil ("Mi Perfil" en el cliente Android).
+
+### PUT /me
+
+Actualizar el nombre del usuario autenticado.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | PUT |
+| **Auth** | Sí (Bearer Token) |
+| **Body** | `{ name: string (required, max:255) }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Perfil actualizado", user: { id, name, email, avatar_url, score, level, ... } }` |
+| **Status** | [x] Implementado ✅ (2026-06-11) |
+
+---
+
+### POST /me/avatar
+
+Subir o reemplazar la foto de perfil del usuario autenticado.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Content-Type** | `multipart/form-data` |
+| **Body** | `{ avatar: File (image, max 5MB, required) }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "Avatar actualizado", avatar_url: string }` |
+| **Status** | [x] Implementado ✅ (2026-06-11) |
+| **Notas** | La foto se guarda en `/storage/avatars/`. Si el usuario ya tenía un avatar subido localmente se elimina del disco antes de guardar el nuevo; los avatares externos (ej: foto de Google) no se borran |
+
+---
+
+### GET /me/reports
+
+Listar los reportes creados por el usuario autenticado (paginado).
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | Sí (Bearer Token) |
+| **Query** | `status?: string` (pending/verified/resolved/archived), `per_page?: integer (default: 15)` |
+| **Respuesta** | `200 OK` — `{ success: true, reports: { current_page, data: [...], total, per_page, ... } }` |
+| **Status** | [x] Implementado ✅ (2026-06-11) |
+| **Notas** | Misma forma que `GET /reports`, pero filtrado por `user_id` del usuario autenticado (evita filtrado client-side) |
+
+---
+
+### GET /me/votes
+
+Historial de votos del usuario autenticado (paginado).
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | GET |
+| **Auth** | Sí (Bearer Token) |
+| **Query** | `per_page?: integer (default: 15)` |
+| **Respuesta** | `200 OK` — `{ success: true, votes: { current_page, data: [...], total, per_page } }` |
+| **Status** | [x] Implementado ✅ (2026-06-11) |
+| **Notas** | Cada item incluye `report_id`, `type`, `created_at` y el objeto `report` con datos resumidos (`description`, `status`, `photo_path`, `votes_confirm`, `votes_resolve`, `category`) |
 
 ---
 
@@ -452,9 +518,10 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 
 ## 🛠️ Desarrollo
 
-**Última actualización del código:** 2026-06-09
+**Última actualización del código:** 2026-06-11
 
 **Commits recientes:**
+- (pendiente commit) - feat: endpoints de "Mi Perfil" — PUT /me, POST /me/avatar, GET /me/reports, GET /me/votes
 - `1510cc5` - fix: autenticación opcional en GET /reports/{id}
 - `318d0cb` - feat: sistema de votos completado para cliente Android
 - `6e89121` - feat: creacion del reporte y endpoints de doc
@@ -463,7 +530,7 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 - [ ] Automatizar transiciones de estado basadas en votos
 - [ ] FCM Push Notifications (nuevo reporte cerca, cambio de estado)
 - [ ] Sistema de scoring (puntos por reportes verificados)
-- [ ] Tests de feature completos
+- [ ] Tests de feature completos (incluir endpoints de Mi Perfil)
 - [ ] Rate limiting en /login y /auth/google
 
 ---

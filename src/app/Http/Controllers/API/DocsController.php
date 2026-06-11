@@ -94,6 +94,72 @@ class DocsController extends Controller
                     'response' => ['success' => true, 'users' => '[]'],
                 ],
 
+                // ==================== PERFIL ====================
+                [
+                    'group' => 'Profile',
+                    'method' => 'PUT',
+                    'path' => '/me',
+                    'auth' => true,
+                    'description' => 'Actualizar nombre del usuario autenticado',
+                    'body' => [
+                        'name' => 'string (required, max:255)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'message' => 'Perfil actualizado',
+                        'user' => ['id', 'name', 'email', 'avatar_url', 'score', 'level'],
+                    ],
+                ],
+                [
+                    'group' => 'Profile',
+                    'method' => 'POST',
+                    'path' => '/me/avatar',
+                    'auth' => true,
+                    'description' => 'Subir o reemplazar la foto de perfil del usuario autenticado',
+                    'content_type' => 'multipart/form-data',
+                    'body' => [
+                        'avatar' => 'file, image, max 5MB (required)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'message' => 'Avatar actualizado',
+                        'avatar_url' => 'string (URL completa)',
+                    ],
+                    'notes' => 'Si el usuario ya tenía un avatar subido localmente, se elimina del disco antes de guardar el nuevo. Avatares externos (ej: Google) no se eliminan.',
+                ],
+                [
+                    'group' => 'Profile',
+                    'method' => 'GET',
+                    'path' => '/me/reports',
+                    'auth' => true,
+                    'description' => 'Listar los reportes creados por el usuario autenticado (paginado)',
+                    'query' => [
+                        'status' => 'pending|verified|resolved|archived (opcional)',
+                        'per_page' => 'integer (default: 15)',
+                    ],
+                    'response' => ['success' => true, 'reports' => '{ current_page, data: [...], total, per_page }'],
+                    'notes' => 'Misma forma que GET /reports, filtrado por user_id del usuario autenticado',
+                ],
+                [
+                    'group' => 'Profile',
+                    'method' => 'GET',
+                    'path' => '/me/votes',
+                    'auth' => true,
+                    'description' => 'Historial de votos del usuario autenticado (paginado)',
+                    'query' => [
+                        'per_page' => 'integer (default: 15)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'votes' => [
+                            'current_page' => 'integer',
+                            'data' => '[{ id, report_id, user_id, type, created_at, report: { id, description, status, photo_path, votes_confirm, votes_resolve, category } }]',
+                            'total' => 'integer',
+                            'per_page' => 'integer',
+                        ],
+                    ],
+                ],
+
                 // ==================== CATEGORÍAS ====================
                 [
                     'group' => 'Categories',
