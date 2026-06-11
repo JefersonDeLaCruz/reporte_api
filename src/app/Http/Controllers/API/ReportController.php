@@ -14,7 +14,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $reports = Report::query()
-            ->with(['user:id,name,avatar_url', 'category'])
+            ->with(['user:id,name,avatar_url,score,level', 'category'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->latest()
@@ -28,7 +28,7 @@ class ReportController extends Controller
 
     public function show(Request $request, Report $report)
     {
-        $report->load(['user:id,name,avatar_url', 'category']);
+        $report->load(['user:id,name,avatar_url,score,level', 'category']);
 
         $userVote = null;
         $userVotedAt = null;

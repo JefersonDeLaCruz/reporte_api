@@ -49,6 +49,8 @@ class ReportVoteController extends Controller
                 ]);
 
                 $report->increment($column);
+                $report->refresh();
+                $report->evaluateAutoStatus();
             });
 
             $report->refresh();
@@ -62,6 +64,7 @@ class ReportVoteController extends Controller
                     'report_id' => $vote->report_id,
                     'votes_confirm' => $report->votes_confirm,
                     'votes_resolve' => $report->votes_resolve,
+                    'status' => $report->status,
                     'created_at' => $vote->created_at->toIso8601String(),
                 ],
             ], 201);

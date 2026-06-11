@@ -90,3 +90,48 @@ Migraciones corridas OK (`php artisan migrate`).
 
 ### TODOs / Próximos pasos
 - [ ] Correr `php artisan migrate:fresh --seed` para aplicar columna nueva (migración aún no corrida)
+
+## [2026-06-11] users — política de `level` definida (RF-29) + scoring/auto-status (RF-11/12/27/30)
+
+### Archivos tocados
+- `src/database/migrations/2026_06_11_000001_update_users_level_values.php` — convierte filas existentes `level='beginner'` → `'nuevo'` y cambia el default de la columna a `'nuevo'`
+- `src/app/Models/User.php` — constantes de nivel/umbrales, `addScore(int $points)`, `levelForScore(int $score)`
+- `src/app/Models/Report.php` — constantes de umbrales de votos/scoring, `evaluateAutoStatus()` y helpers privados
+- `src/app/Http/Controllers/API/ReportVoteController.php` — `store()` invoca `evaluateAutoStatus()` dentro de la transacción y retorna `status` en `data`
+- `src/app/Http/Controllers/API/ReportController.php` — `index()`/`show()` agregan `score,level` al select de `user`
+
+### Política de `level` (RF-29)
+
+| Nivel        | Score mínimo | Constante                  |
+|--------------|--------------|-----------------------------|
+| `nuevo`      | 0            | `User::LEVEL_NUEVO`          |
+| `colaborador`| 20           | `User::LEVEL_COLABORADOR`    |
+| `guardian`   | 100          | `User::LEVEL_GUARDIAN`       |
+| `experto`    | 300          | `User::LEVEL_EXPERTO`        |
+
+> Umbrales elegidos (no estaban en el spec original) — ajustar `User::SCORE_COLABORADOR` / `SCORE_GUARDIAN` / `SCORE_EXPERTO` si se requiere otra progresión. El valor legado `'beginner'` se migra a `'nuevo'`.
+
+### Scoring (RF-27)
+
+| Evento                                              | Beneficiario              | Puntos | Constante                          |
+|------------------------------------------------------|---------------------------|--------|-------------------------------------|
+| Reporte pasa a `verified`                            | Dueño del reporte          | +10    | `Report::SCORE_OWNER_VERIFIED`      |
+| Reporte llega a `verified` o `resolved` (lo primero) | Cada usuario que votó `confirm` | +2 | `Report::SCORE_CONFIRM_MATCH`       |
+| Reporte pasa a `resolved`                            | Cada usuario que votó `resolve` | +5 | `Report::SCORE_RESOLVE_MATCH`       |
+
+`User::addScore()` suma el score y recalcula `level` automáticamente con `levelForScore()`.
+
+### Transiciones automáticas de estado (RF-11/RF-12/RF-30)
+
+Evaluadas en `Report::evaluateAutoStatus()`, llamado tras cada voto en `ReportVoteController::store()`:
+
+| Transición            | Condición                                                                 |
+|------------------------|----------------------------------------------------------------------------|
+| `pending` → `verified` | `votes_confirm >= 5` **o** (`votes_confirm >= 3` y algún votante `confirm` tiene `level = experto`) |
+| `pending`/`verified` → `resolved` | `(votes_confirm + votes_resolve) >= 3` y `votes_resolve / total >= 0.7` |
+
+Si un reporte pasa directo de `pending` a `resolved` (sin pasar por `verified`), los votantes `confirm` igual reciben el bono de +2 (controlado vía `verified_at`).
+
+### TODOs / Próximos pasos
+- [ ] RF-13: comando programado (scheduler) para auto-archivar reportes `pending`/`verified` sin votos en 24h → `archived`
+- [ ] Revisar si los umbrales de `level` (20/100/300) necesitan ajuste según datos reales de uso
