@@ -135,3 +135,17 @@ Si un reporte pasa directo de `pending` a `resolved` (sin pasar por `verified`),
 ### TODOs / Próximos pasos
 - [ ] RF-13: comando programado (scheduler) para auto-archivar reportes `pending`/`verified` sin votos en 24h → `archived`
 - [ ] Revisar si los umbrales de `level` (20/100/300) necesitan ajuste según datos reales de uso
+
+## [2026-06-11] Corrección de zona horaria — timestamps a hora salvadoreña
+
+### Archivos tocados
+- (datos, vía SQL directo) Se restaron 6 horas a todos los timestamps existentes en: `categories` (created_at, updated_at), `failed_jobs` (failed_at), `password_reset_tokens` (created_at), `personal_access_tokens` (created_at, updated_at, expires_at, last_used_at), `report_votes` (created_at, updated_at), `reports` (created_at, updated_at, archived_at, resolved_at, status_changed_at, verified_at), `users` (created_at, updated_at, email_verified_at)
+
+### Notas
+- El servidor MySQL (`api_db`) ya tenía `TZ=America/El_Salvador` correcto (`NOW()` devolvía hora local CST UTC-6).
+- El problema: Laravel (`config/app.php`) estaba en `'timezone' => 'UTC'`, por lo que Carbon/`now()` generaba timestamps 6h adelantados respecto a la hora real. Los registros existentes estaban en UTC y se corrigieron restando 6h para alinearlos.
+- Cambio de config relacionado en `docu/general/general.md`.
+
+### TODOs / Próximos pasos
+- [ ] Verificar que la expiración de `personal_access_tokens.expires_at` siga funcionando bien (la diferencia relativa created_at↔expires_at se preservó, solo cambió el valor absoluto)
+- [ ] Revisar si hay código que asuma timestamps en UTC explícitamente (ej. `Carbon::now('UTC')`)

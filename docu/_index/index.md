@@ -10,3 +10,4 @@
 - [2026-06-08] [api] — sistema de votos completado: POST /reports/{id}/votes retorna `data` con conteos, GET /reports/{id} incluye `user_vote` y `user_voted_at` para cliente Android
 - [2026-06-11] [api] — endpoints de "Mi Perfil": PUT /me (actualizar nombre), POST /me/avatar (subir foto), GET /me/reports y GET /me/votes (paginados)
 - [2026-06-11] [db][api] — RF-11/12/27/29/30: transiciones automáticas de estado (verified/resolved) por umbral de votos, sistema de scoring y niveles (nuevo/colaborador/guardian/experto), `user.score`/`level` agregados a /reports y /reports/{id}
+- [2026-06-11] [db][general] — corregida zona horaria: `config/app.php` a `America/El_Salvador` y timestamps existentes ajustados (-6h, estaban en UTC)
