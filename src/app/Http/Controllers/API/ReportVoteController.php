@@ -14,6 +14,9 @@ class ReportVoteController extends Controller
 {
     private const MAX_DISTANCE_METERS = 500;
 
+    /** Ventana para cambiar/retirar el propio voto (RF-09). */
+    private const VOTE_EDIT_WINDOW_MINUTES = 5;
+
     /**
      * Registra un voto (confirm|resolve) si el usuario está dentro de 500m del reporte.
      * Bloqueo optimista: la unicidad (report_id, user_id, type) en DB evita votos duplicados
@@ -98,6 +101,13 @@ class ReportVoteController extends Controller
                 'success' => false,
                 'message' => 'No has votado este reporte con ese tipo',
             ], 404);
+        }
+
+        if ($vote->created_at->lt(now()->subMinutes(self::VOTE_EDIT_WINDOW_MINUTES))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo puedes cambiar tu voto durante los primeros '.self::VOTE_EDIT_WINDOW_MINUTES.' minutos',
+            ], 403);
         }
 
         $column = $type === 'confirm' ? 'votes_confirm' : 'votes_resolve';

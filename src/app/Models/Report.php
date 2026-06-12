@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\ReportStatusChanged;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,12 @@ class Report extends Model
     public const SCORE_OWNER_VERIFIED = 10;
     public const SCORE_CONFIRM_MATCH = 2;
     public const SCORE_RESOLVE_MATCH = 5;
+
+    /** Horas que un reporte resuelto permanece visible antes de archivarse (RF-18). */
+    public const RESOLVED_VISIBLE_HOURS = 2;
+
+    /** Horas sin interacción antes de archivar un reporte pendiente/verificado (RF-13). */
+    public const STALE_HOURS = 24;
 
     protected function casts(): array
     {
@@ -165,5 +172,44 @@ class Report extends Model
         User::whereIn('id', $userIds)->get()->each(
             fn (User $user) => $user->addScore($points)
         );
+    }
+
+    /**
+     * Archiva reportes resueltos hace más de RESOLVED_VISIBLE_HOURS (RF-18) y
+     * reportes pendientes/verificados sin interacción desde STALE_HOURS (RF-13).
+     *
+     * @return list<self> Reportes archivados.
+     */
+    public static function archiveStaleReports(): array
+    {
+        $archived = [];
+
+        static::where('status', 'resolved')
+            ->where('resolved_at', '<=', now()->subHours(self::RESOLVED_VISIBLE_HOURS))
+            ->each(function (self $report) use (&$archived) {
+                $archived[] = $report->archive();
+            });
+
+        static::whereIn('status', ['pending', 'verified'])
+            ->where('updated_at', '<=', now()->subHours(self::STALE_HOURS))
+            ->each(function (self $report) use (&$archived) {
+                $archived[] = $report->archive();
+            });
+
+        return $archived;
+    }
+
+    private function archive(): self
+    {
+        $previousStatus = $this->status;
+
+        $this->status = 'archived';
+        $this->status_changed_at = now();
+        $this->archived_at = now();
+        $this->save();
+
+        ReportStatusChanged::dispatch($this, $previousStatus);
+
+        return $this;
     }
 }
