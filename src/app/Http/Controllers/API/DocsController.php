@@ -294,6 +294,26 @@ class DocsController extends Controller
                     'notes' => 'Actualiza status_changed_at y el timestamp específico (verified_at, resolved_at, archived_at)',
                 ],
 
+                // ==================== REAL-TIME & STREAMING ====================
+                [
+                    'group' => 'Real-time',
+                    'method' => 'GET',
+                    'path' => '/reports/stream/changes',
+                    'auth' => false,
+                    'description' => 'Obtener reportes creados/actualizados recientemente para mapa real-time',
+                    'query' => [
+                        'since' => 'string ISO 8601 (optional, default: últimos 5 min)',
+                        'limit' => 'integer (optional, default: 50, max: 1000)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'timestamp' => 'string (ISO 8601, momento de la respuesta)',
+                        'count' => 'integer (cantidad de reportes retornados)',
+                        'reports' => '[{ id, latitude, longitude, status, description, category, user, votes_confirm, votes_resolve, photo_path, created_at, updated_at }]',
+                    ],
+                    'notes' => 'Usa eventos ShouldBroadcast + Redis. Cliente Android hace polling cada 5-10 seg. Sin dependencias WebSocket, escalable hacia Echo Server si es necesario.',
+                ],
+
                 // ==================== VOTOS ====================
                 [
                     'group' => 'Voting',
