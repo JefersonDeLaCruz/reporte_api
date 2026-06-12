@@ -5,6 +5,7 @@ use App\Http\Controllers\API\CategoryController;
 use App\Http\Controllers\API\DocsController;
 use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ReportController;
+use App\Http\Controllers\API\ReportStreamController;
 use App\Http\Controllers\API\ReportVoteController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
 Route::get('/reports', [ReportController::class, 'index']);
 Route::get('/reports/{report}', [ReportController::class, 'show']);
+Route::get('/reports/stream/changes', [ReportStreamController::class, 'changes']);
 
 // Protected
 Route::middleware('auth:sanctum')->group(function () {

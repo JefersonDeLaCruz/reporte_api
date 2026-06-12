@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Events\ReportCreated;
+use App\Events\ReportStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Report;
 use App\Models\ReportVote;
@@ -98,6 +100,8 @@ class ReportController extends Controller
                 'status' => 'pending',
             ]);
 
+            ReportCreated::dispatch($report);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Reporte creado',
@@ -172,6 +176,7 @@ class ReportController extends Controller
                 'status' => 'required|in:pending,verified,resolved,archived',
             ]);
 
+            $previousStatus = $report->status;
             $status = $data['status'];
             $report->status = $status;
             $report->status_changed_at = now();
@@ -188,6 +193,8 @@ class ReportController extends Controller
             }
 
             $report->save();
+
+            ReportStatusChanged::dispatch($report, $previousStatus);
 
             return response()->json([
                 'success' => true,
