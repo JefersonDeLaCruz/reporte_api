@@ -17,6 +17,7 @@ class ReportController extends Controller
             ->with(['user:id,name,avatar_url,score,level', 'category'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
+            ->when($request->filled('updated_after'), fn ($q) => $q->where('updated_at', '>', $request->date('updated_after')))
             ->latest()
             ->paginate($request->integer('per_page', 15));
 
