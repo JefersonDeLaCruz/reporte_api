@@ -33,17 +33,25 @@ return new class extends Migration
             }
         }
 
+        // El índice (report_id, user_id, type) soporta el FK de report_id; hay que
+        // crear primero un índice que también empiece por report_id antes de borrarlo.
+        Schema::table('report_votes', function (Blueprint $table) {
+            $table->unique(['report_id', 'user_id']);
+        });
+
         Schema::table('report_votes', function (Blueprint $table) {
             $table->dropUnique(['report_id', 'user_id', 'type']);
-            $table->unique(['report_id', 'user_id']);
         });
     }
 
     public function down(): void
     {
         Schema::table('report_votes', function (Blueprint $table) {
-            $table->dropUnique(['report_id', 'user_id']);
             $table->unique(['report_id', 'user_id', 'type']);
+        });
+
+        Schema::table('report_votes', function (Blueprint $table) {
+            $table->dropUnique(['report_id', 'user_id']);
         });
     }
 };
