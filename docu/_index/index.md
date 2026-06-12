@@ -12,3 +12,4 @@
 - [2026-06-11] [db][api] — RF-11/12/27/29/30: transiciones automáticas de estado (verified/resolved) por umbral de votos, sistema de scoring y niveles (nuevo/colaborador/guardian/experto), `user.score`/`level` agregados a /reports y /reports/{id}
 - [2026-06-11] [db][general] — corregida zona horaria: `config/app.php` a `America/El_Salvador` y timestamps existentes ajustados (-6h, estaban en UTC)
 - [2026-06-12] [api] — sistema real-time con eventos: ReportCreated y ReportStatusChanged implementados, Redis broadcasting configurado, endpoint GET /reports/stream/changes para polling de cambios recientes (cliente Android detecta reportes nuevos sin reload)
+- [2026-06-12] [db][api] — RF-13/RF-18: comando `reports:archive-stale` (scheduler cada 5min) verificado end-to-end (resolved >2h y pending/verified >24h → archived)

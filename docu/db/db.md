@@ -133,7 +133,7 @@ Evaluadas en `Report::evaluateAutoStatus()`, llamado tras cada voto en `ReportVo
 Si un reporte pasa directo de `pending` a `resolved` (sin pasar por `verified`), los votantes `confirm` igual reciben el bono de +2 (controlado vía `verified_at`).
 
 ### TODOs / Próximos pasos
-- [ ] RF-13: comando programado (scheduler) para auto-archivar reportes `pending`/`verified` sin votos en 24h → `archived`
+- [x] RF-13: comando programado (scheduler) para auto-archivar reportes `pending`/`verified` sin votos en 24h → `archived` ✅ (2026-06-12, ver entrada de archivado automático más abajo)
 - [ ] Revisar si los umbrales de `level` (20/100/300) necesitan ajuste según datos reales de uso
 
 ## [2026-06-11] Corrección de zona horaria — timestamps a hora salvadoreña
@@ -149,3 +149,32 @@ Si un reporte pasa directo de `pending` a `resolved` (sin pasar por `verified`),
 ### TODOs / Próximos pasos
 - [ ] Verificar que la expiración de `personal_access_tokens.expires_at` siga funcionando bien (la diferencia relativa created_at↔expires_at se preservó, solo cambió el valor absoluto)
 - [ ] Revisar si hay código que asuma timestamps en UTC explícitamente (ej. `Carbon::now('UTC')`)
+
+## [2026-06-12] Archivado automático de reportes (RF-13/RF-18) — verificado end-to-end
+
+### Archivos tocados
+- `src/app/Models/Report.php` — `archiveStaleReports()` (estático) y `archive()` (privado), ya existentes desde commit `b8b7493`
+- `src/app/Console/Commands/ArchiveStaleReports.php` — comando `reports:archive-stale`, ya existente desde commit `b8b7493`
+- `src/routes/console.php` — `Schedule::command('reports:archive-stale')->everyFiveMinutes()`, ya existente desde commit `b8b7493`
+
+### Reglas
+
+| Regla   | Condición                                                                 | Resultado |
+|---------|-----------------------------------------------------------------------------|-----------|
+| RF-18   | `status = 'resolved'` y `resolved_at <= now() - 2h` (`Report::RESOLVED_VISIBLE_HOURS`) | → `archived` |
+| RF-13   | `status IN ('pending','verified')` y `updated_at <= now() - 24h` (`Report::STALE_HOURS`) | → `archived` |
+
+Al archivar: `status = 'archived'`, `status_changed_at = now()`, `archived_at = now()`, se dispara `ReportStatusChanged`.
+
+### Verificación realizada (2026-06-12)
+- Flujo end-to-end vía curl: `POST /register` → `POST /reports` (x2, reportes id=1 y id=2, status `pending`)
+- SQL: reporte 1 → `status='resolved'`, `resolved_at = NOW() - 3h` (cumple RF-18); reporte 2 → `status='pending'`, `updated_at = NOW() - 25h` (cumple RF-13)
+- `docker exec api_app php artisan reports:archive-stale` → `2 reporte(s) archivado(s).`
+- Confirmado en DB: ambos reportes quedaron con `status='archived'` y `archived_at`/`status_changed_at` seteados a la hora actual
+- Confirmado que `now()` (Laravel, `America/El_Salvador`) y `NOW()` (MySQL, `SYSTEM`/El Salvador) están sincronizados — sin desfase de zona horaria
+
+### Notas
+- Para correr el seeder de categorías en una DB recién migrada: `docker exec api_app php artisan db:seed --class=CategorySeeder` (category_id=1 = "Bache")
+
+### TODOs / Próximos pasos
+- [ ] Confirmar que el scheduler (`Schedule::command(...)->everyFiveMinutes()`) corre en producción (requiere `php artisan schedule:work` o cron con `schedule:run`)

@@ -647,7 +647,7 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 - [x] Automatizar transiciones de estado basadas en votos ✅ (2026-06-11, RF-11/12/30)
 - [x] Sistema de scoring (puntos por reportes verificados) ✅ (2026-06-11, RF-27/29)
 - [ ] FCM Push Notifications (nuevo reporte cerca, cambio de estado)
-- [ ] RF-13: comando programado para auto-archivar reportes sin votos en 24h
+- [x] RF-13/RF-18: comando programado (`reports:archive-stale`, cada 5 min) para auto-archivar reportes ✅ (2026-06-12, ver `docu/db/db.md`)
 - [ ] Tests de feature completos (incluir endpoints de Mi Perfil, votos y scoring)
 - [ ] Rate limiting en /login y /auth/google
 
