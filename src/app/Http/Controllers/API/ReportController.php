@@ -154,6 +154,20 @@ class ReportController extends Controller
     {
         $this->authorizeOwner($request, $report);
 
+        if ($report->created_at->lt(now()->subMinutes(5))) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'Solo podés retirar el reporte dentro de los primeros 5 minutos',
+            ], 403));
+        }
+
+        if (($report->votes_confirm + $report->votes_resolve) >= 3) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'No se puede retirar un reporte con 3 o más votos',
+            ], 403));
+        }
+
         if ($report->photo_path) {
             Storage::disk('public')->delete($report->photo_path);
         }

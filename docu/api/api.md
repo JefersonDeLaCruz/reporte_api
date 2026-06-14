@@ -633,6 +633,21 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 
 ---
 
+## 📌 RF-06: Retiro de reporte propio
+
+### Ruta: [DELETE] /reports/{report}
+
+| Campo        | Detalle                         |
+|-------------|---------------------------------|
+| Método      | DELETE                          |
+| Auth        | Bearer Token (owner)            |
+| Body        | N/A                              |
+| Respuesta   | `{ success: bool, message: string }` |
+| Estado      | [x] implementada                |
+| Notas       | Ruta ya existía (destroy()); se agregó validación: 403 si `created_at` > 5min de antigüedad, o si `votes_confirm+votes_resolve >= 3`. Borra foto asociada y el registro. |
+
+---
+
 ## 🛠️ Desarrollo
 
 **Última actualización del código:** 2026-06-11
