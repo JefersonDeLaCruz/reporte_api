@@ -3,6 +3,7 @@
 <!-- El agente agrega entradas aquí: -->
 <!-- - [YYYY-MM-DD] [modulo] — descripción -->
 - [2026-06-06] [db] — tabla users expandida con google_id, avatar_url, score, level, fcm_token, onboarding_done
+- [2026-06-15] [api] — password recovery: POST /forgot-password y POST /reset-password vía Brevo SMTP
 - [2026-06-06] [api] — AuthController implementado: register, login, logout, getAllUser con Sanctum
 - [2026-06-08] [db] — tablas categories, reports y report_votes creadas y migradas
 - [2026-06-08] [api] — endpoints CRUD de categorías/reportes + motor de votos (radio 500m, bloqueo optimista) + seeders con datos de prueba en San Miguel, El Salvador

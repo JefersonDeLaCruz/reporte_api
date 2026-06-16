@@ -669,3 +669,40 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 ---
 
 **Endpoint de documentación automática:** `GET /api/docs` (retorna JSON con estructura de endpoints)
+
+---
+
+## [2026-06-15] Password Recovery vía SMTP (Brevo)
+
+### Archivos tocados
+- `app/Mail/PasswordResetMail.php` — Mailable que envía el token al usuario
+- `resources/views/emails/password-reset.blade.php` — template HTML del email
+- `app/Http/Controllers/API/PasswordResetController.php` — lógica forgot + reset
+- `routes/api.php` — 2 rutas públicas nuevas
+- `.env` — SMTP configurado con Brevo (smtp-relay.brevo.com:587)
+
+### Ruta: POST /forgot-password
+
+| Campo    | Detalle                            |
+|---------|------------------------------------|
+| Método  | POST                                |
+| Auth    | No                                  |
+| Body    | `{ email: string }`                 |
+| Respuesta | `{ success: true, message: string }` |
+| Estado  | [x] lista                           |
+| Notas   | Siempre retorna 200 (evita email enumeration). Token expira 60 min. |
+
+### Ruta: POST /reset-password
+
+| Campo    | Detalle                                                          |
+|---------|------------------------------------------------------------------|
+| Método  | POST                                                              |
+| Auth    | No                                                                |
+| Body    | `{ email, token, password, password_confirmation }`              |
+| Respuesta | `{ success: true, message: string }`                           |
+| Estado  | [x] lista                                                         |
+| Notas   | Token de 64 chars random, hasheado en DB. Elimina token post-uso. |
+
+### TODOs / Próximos pasos
+- [ ] Implementar pantalla "Olvidé contraseña" en Android
+- [ ] Implementar pantalla "Nueva contraseña" en Android (recibe token del email)
