@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Mail\PasswordResetMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
@@ -31,7 +30,13 @@ class PasswordResetController extends Controller
             ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        Mail::to($request->email)->send(new PasswordResetMail($token, $request->email));
+        Http::withHeaders(['api-key' => env('BREVO_API_KEY')])
+            ->post('https://api.brevo.com/v3/smtp/email', [
+                'sender'     => ['name' => config('app.name'), 'email' => config('mail.from.address')],
+                'to'         => [['email' => $request->email]],
+                'subject'    => 'Recuperación de contraseña',
+                'htmlContent' => view('emails.password-reset', ['token' => $token, 'email' => $request->email])->render(),
+            ]);
 
         return response()->json(['success' => true, 'message' => 'Si el correo existe, recibirás un enlace.']);
     }
