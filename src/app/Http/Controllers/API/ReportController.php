@@ -7,6 +7,7 @@ use App\Events\ReportStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Report;
 use App\Models\ReportVote;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -101,6 +102,9 @@ class ReportController extends Controller
             ]);
 
             ReportCreated::dispatch($report);
+
+            $notificationService = new NotificationService();
+            $notificationService->notifyNearbyUsers($report);
 
             return response()->json([
                 'success' => true,
@@ -209,6 +213,9 @@ class ReportController extends Controller
             $report->save();
 
             ReportStatusChanged::dispatch($report, $previousStatus);
+
+            $notificationService = new NotificationService();
+            $notificationService->notifyVoters($report, $previousStatus);
 
             return response()->json([
                 'success' => true,

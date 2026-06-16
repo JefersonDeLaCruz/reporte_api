@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::put('/me', [ProfileController::class, 'update']);
     Route::post('/me/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::post('/me/fcm-token', [ProfileController::class, 'updateFcmToken']);
     Route::get('/me/reports', [ProfileController::class, 'reports']);
     Route::get('/me/votes', [ProfileController::class, 'votes']);
     Route::get('/users', [AuthController::class, 'getAllUser']);

@@ -4,7 +4,7 @@
 
 **Auth Method:** `Bearer Token` (Laravel Sanctum)
 
-**Última actualización:** 2026-06-12
+**Última actualización:** 2026-06-16
 
 ---
 
@@ -30,6 +30,7 @@ Usar `/register` o `/login` para obtener un token. El token se incluye en la res
 - [📍 Reportes](#reportes)
 - [⚡ Real-time & Streaming](#real-time--streaming)
 - [🗳️ Sistema de Votos](#sistema-de-votos)
+- [🔔 Notificaciones Push](#notificaciones-push)
 
 ---
 
@@ -164,6 +165,32 @@ Subir o reemplazar la foto de perfil del usuario autenticado.
 | **Respuesta** | `200 OK` — `{ success: true, message: "Avatar actualizado", avatar_url: string }` |
 | **Status** | [x] Implementado ✅ (2026-06-11) |
 | **Notas** | La foto se guarda en `/storage/avatars/`. Si el usuario ya tenía un avatar subido localmente se elimina del disco antes de guardar el nuevo; los avatares externos (ej: foto de Google) no se borran |
+
+---
+
+### POST /me/fcm-token
+
+Registrar o actualizar el token de Firebase Cloud Messaging (FCM) del usuario para recibir notificaciones push.
+
+| Campo | Detalle |
+|-------|---------|
+| **Método** | POST |
+| **Auth** | Sí (Bearer Token) |
+| **Content-Type** | `application/json` |
+| **Body** | `{ fcm_token: string (required, max:500) }` |
+| **Respuesta** | `200 OK` — `{ success: true, message: "FCM token actualizado" }` |
+| **Status** | [x] Implementado ✅ (2026-06-16) |
+| **Notas** | El token se obtiene del cliente Android usando Firebase SDK. Se almacena en la columna `fcm_token` de `users` y se usa para enviar notificaciones push cuando se crean reportes o cambian estados |
+
+**Ejemplo de request:**
+```bash
+curl -X POST http://localhost:8080/api/me/fcm-token \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fcm_token": "eJxlUMtuwjAM/BXLT..."
+  }'
+```
 
 ---
 
@@ -706,3 +733,119 @@ Response: { report: { votes: { confirm: 1, resolve: 0 }, user_vote: "confirm", .
 ### TODOs / Próximos pasos
 - [ ] Implementar pantalla "Olvidé contraseña" en Android
 - [ ] Implementar pantalla "Nueva contraseña" en Android (recibe token del email)
+
+---
+
+## 🔔 Notificaciones Push
+
+### Arquitectura
+
+Las notificaciones push se envían usando **Firebase Cloud Messaging (FCM)** integrado con Laravel. El flujo es:
+
+1. **Registro del token (Cliente Android):**
+   - App obtiene `fcm_token` del Firebase SDK
+   - Envía `POST /me/fcm-token` con el token
+   - Backend almacena en `users.fcm_token`
+
+2. **Envío automático (Backend):**
+   - Cuando se crea un reporte: **notifica a todos los usuarios** con FCM token registrado
+   - Cuando cambia el estado del reporte: **notifica a usuarios que votaron** en ese reporte
+   - Usa `App/Services/NotificationService` para enviar mensajes vía FCM
+
+3. **Datos en la notificación:**
+   - **Reportes nuevos:** `report_id`, `latitude`, `longitude`, `status`, `type: 'new_report'`
+   - **Cambios de estado:** `report_id`, `new_status`, `previous_status`
+
+### Configuración Firebase (Backend)
+
+**Archivo:** `.firebase/firebase-credentials.json` (credenciales del proyecto Firebase)
+**Variables de entorno:**
+```env
+FIREBASE_CREDENTIALS_PATH=.firebase/firebase-credentials.json
+FIREBASE_PROJECT_ID=reporte-bombayashi
+```
+
+**Instalación:**
+```bash
+composer require kreait/firebase-php
+```
+
+### Ejemplo: Flujo de Notificaciones
+
+#### 1. Registrar FCM Token (Cliente → Backend)
+
+```bash
+curl -X POST http://localhost:8080/api/me/fcm-token \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fcm_token": "eJxlUMtuwjAM_BXLT..."
+  }'
+```
+
+Respuesta:
+```json
+{
+  "success": true,
+  "message": "FCM token actualizado"
+}
+```
+
+#### 2. Crear Reporte (Trigger automático de notificación)
+
+```bash
+curl -X POST http://localhost:8080/api/reports \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category_id": 1,
+    "latitude": 13.4839,
+    "longitude": -88.2695,
+    "description": "Bache en la calle 5ta"
+  }'
+```
+
+**Automáticamente el backend:**
+- Crea el reporte
+- Busca todos los usuarios con `fcm_token`
+- Envía notificación push a cada uno
+
+**Notificación recibida en Android:**
+```json
+{
+  "notification": {
+    "title": "Baches",
+    "body": "Bache en la calle 5ta"
+  },
+  "data": {
+    "report_id": "123",
+    "latitude": "13.4839",
+    "longitude": "-88.2695",
+    "status": "pending",
+    "type": "new_report"
+  }
+}
+```
+
+#### 3. Cambiar Estado del Reporte (Trigger automático)
+
+```bash
+curl -X PATCH http://localhost:8080/api/reports/123/status \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "resolved"
+  }'
+```
+
+**Automáticamente el backend:**
+- Actualiza el estado
+- Busca usuarios que votaron en ese reporte
+- Envía notificación de cambio de estado
+
+### TODOs / Próximos pasos
+
+- [ ] Implementar en Android: obtener `fcm_token` del Firebase SDK y enviarlo a `POST /me/fcm-token` en login
+- [ ] En Android: procesar notificaciones recibidas y actualizar mapa con `data.report_id` (sin reload)
+- [ ] Agregar preferencias de notificaciones por usuario (ej: silenciar categorías específicas)
+- [ ] Logging y monitoreo de fallos en envío de notificaciones

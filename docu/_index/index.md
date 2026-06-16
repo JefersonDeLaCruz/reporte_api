@@ -15,3 +15,4 @@
 - [2026-06-12] [api] — sistema real-time con eventos: ReportCreated y ReportStatusChanged implementados, Redis broadcasting configurado, endpoint GET /reports/stream/changes para polling de cambios recientes (cliente Android detecta reportes nuevos sin reload)
 - [2026-06-12] [db][api] — RF-13/RF-18: comando `reports:archive-stale` (scheduler cada 5min) verificado end-to-end (resolved >2h y pending/verified >24h → archived)
 - [2026-06-13] [api] — RF-06: DELETE /reports/{report} ahora valida 5min de antigüedad y votos<3 antes de permitir retiro (403 si no cumple)
+- [2026-06-16] [api] — notificaciones push vía Firebase: POST /me/fcm-token para registrar token, NotificationService envía notificaciones automáticas cuando se crean reportes o cambian estados, credenciales en .firebase/ (gitignored)
