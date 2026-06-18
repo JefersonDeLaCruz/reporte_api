@@ -23,7 +23,7 @@ class PasswordResetController extends Controller
             return response()->json(['success' => true, 'message' => 'Si el correo existe, recibirás un enlace.']);
         }
 
-        $token = Str::random(64);
+        $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],

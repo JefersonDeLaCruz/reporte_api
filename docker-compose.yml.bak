@@ -36,22 +36,6 @@ services:
       - api_net
     restart: unless-stopped
 
-  scheduler:
-    build:
-      context: .
-      args:
-        UID: ${UID:-1000}
-        GID: ${GID:-1000}
-    container_name: api_scheduler
-    command: php artisan schedule:work
-    volumes:
-      - ./src:/var/www/html:delegated
-    depends_on:
-      - db
-    networks:
-      - api_net
-    restart: unless-stopped
-
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: api_phpmyadmin
