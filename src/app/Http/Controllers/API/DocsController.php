@@ -129,6 +129,21 @@ class DocsController extends Controller
                 ],
                 [
                     'group' => 'Profile',
+                    'method' => 'POST',
+                    'path' => '/me/fcm-token',
+                    'auth' => true,
+                    'description' => 'Registrar o actualizar token de Firebase Cloud Messaging para notificaciones push',
+                    'body' => [
+                        'fcm_token' => 'string (required, max:500)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'message' => 'FCM token actualizado',
+                    ],
+                    'notes' => 'El token se obtiene del cliente Android usando Firebase SDK. Se almacena en users.fcm_token y se usa para enviar notificaciones push automáticas.',
+                ],
+                [
+                    'group' => 'Profile',
                     'method' => 'GET',
                     'path' => '/me/reports',
                     'auth' => true,
@@ -312,6 +327,23 @@ class DocsController extends Controller
                         'reports' => '[{ id, latitude, longitude, status, description, category, user, votes_confirm, votes_resolve, photo_path, created_at, updated_at }]',
                     ],
                     'notes' => 'Usa eventos ShouldBroadcast + Redis. Cliente Android hace polling cada 5-10 seg. Sin dependencias WebSocket, escalable hacia Echo Server si es necesario.',
+                ],
+
+                // ==================== NOTIFICACIONES PUSH ====================
+                [
+                    'group' => 'Notifications',
+                    'method' => 'POST',
+                    'path' => '/me/fcm-token',
+                    'auth' => true,
+                    'description' => 'Registrar token de Firebase Cloud Messaging para notificaciones push',
+                    'body' => [
+                        'fcm_token' => 'string (required, max:500)',
+                    ],
+                    'response' => [
+                        'success' => true,
+                        'message' => 'FCM token actualizado',
+                    ],
+                    'notes' => 'Backend envía notificaciones automáticas cuando se crean reportes (a todos) o cambian estados (a votantes). Implementación: Service/NotificationService.php + Firebase Admin SDK.',
                 ],
 
                 // ==================== VOTOS ====================

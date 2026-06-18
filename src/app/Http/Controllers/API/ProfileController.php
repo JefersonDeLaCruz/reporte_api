@@ -115,6 +115,32 @@ class ProfileController extends Controller
     }
 
     /**
+     * Actualiza el token de FCM del usuario autenticado para notificaciones push.
+     */
+    public function updateFcmToken(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'fcm_token' => 'required|string|max:500',
+            ]);
+
+            $user = $request->user();
+            $user->update(['fcm_token' => $data['fcm_token']]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'FCM token actualizado',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    }
+
+    /**
      * Extrae la ruta relativa (en el disco "public") de una URL de avatar
      * generada localmente, o null si la URL es externa (ej: foto de Google).
      */
