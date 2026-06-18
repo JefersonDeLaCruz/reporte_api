@@ -21,6 +21,13 @@ class ReportController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('updated_after'), fn ($q) => $q->where('updated_at', '>', $request->date('updated_after')))
+            ->when(
+                $request->filled('lat_min') && $request->filled('lat_max') &&
+                $request->filled('lng_min') && $request->filled('lng_max'),
+                fn ($q) => $q
+                    ->whereBetween('latitude', [$request->float('lat_min'), $request->float('lat_max')])
+                    ->whereBetween('longitude', [$request->float('lng_min'), $request->float('lng_max')])
+            )
             ->latest()
             ->paginate($request->integer('per_page', 15));
 

@@ -4,7 +4,7 @@
 
 **Auth Method:** `Bearer Token` (Laravel Sanctum)
 
-**Última actualización:** 2026-06-16
+**Última actualización:** 2026-06-18
 
 ---
 
@@ -849,3 +849,37 @@ curl -X PATCH http://localhost:8080/api/reports/123/status \
 - [ ] En Android: procesar notificaciones recibidas y actualizar mapa con `data.report_id` (sin reload)
 - [ ] Agregar preferencias de notificaciones por usuario (ej: silenciar categorías específicas)
 - [ ] Logging y monitoreo de fallos en envío de notificaciones
+
+---
+
+## [2026-06-18] GET /reports — Filtro por bounding box (viewport-based loading)
+
+### Archivos tocados
+- `app/Http/Controllers/API/ReportController.php` — agregados 4 query params opcionales de bounding box
+
+### Descripción
+`GET /reports` ahora acepta parámetros opcionales de bounding box geográfico. Si los 4 están presentes, filtra reportes con `whereBetween` en `latitude` y `longitude`. Si alguno falta, retorna todos los reportes sin filtro geográfico (comportamiento anterior).
+
+### Parámetros nuevos (todos opcionales)
+
+| Param     | Tipo   | Descripción                          |
+|-----------|--------|--------------------------------------|
+| `lat_min` | float  | Latitud mínima del viewport          |
+| `lat_max` | float  | Latitud máxima del viewport          |
+| `lng_min` | float  | Longitud mínima del viewport         |
+| `lng_max` | float  | Longitud máxima del viewport         |
+
+Compatibles con los parámetros existentes: `status`, `category_id`, `updated_after`, `per_page`.
+
+### Ruta: GET /reports (con bounding box)
+
+| Campo    | Detalle                                              |
+|----------|------------------------------------------------------|
+| Método   | GET                                                  |
+| Auth     | No                                                   |
+| Query    | `lat_min`, `lat_max`, `lng_min`, `lng_max` (floats)  |
+| Respuesta | paginado igual que antes                            |
+| Estado   | [x] implementada                                    |
+
+### TODOs / Próximos pasos
+- [ ] Agregar índice compuesto `(latitude, longitude)` en tabla `reports` para queries de bounding box a escala
