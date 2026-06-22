@@ -70,3 +70,24 @@ composer require kreait/firebase-php
 - [ ] Panel de preferencias de notificaciones (silenciar por categoría, etc.)
 - [ ] Monitoreo de tasa de fallos de envío
 - [ ] Considerar agregar data para deep-linking (abrir reporte directamente)
+
+---
+
+## [2026-06-21] welcome.blade.php — Landing page de la API
+
+### Archivos tocados
+- `resources/views/welcome.blade.php` — reescritura completa
+
+### Cambios
+- Eliminada la página genérica de Laravel (logo, "Let's get started", links a docs de Laravel).
+- Reemplazada por una landing page oscura del proyecto con:
+  - Nombre del proyecto (desde `APP_NAME`) y tagline descriptivo
+  - Barra de URL base (`APP_URL/api`) con badge de autenticación Bearer
+  - Tabla de endpoints agrupados por módulo (Auth, Perfil, Reportes, Votos, Categorías) con método HTTP, path y descripción
+  - Indicador 🔒 en rutas protegidas por Sanctum
+  - Tarjetas de referencia rápida: encabezado de auth, ciclo de vida del reporte (pending→verified→resolved→archived), tipos de voto, link a /api/docs
+  - Footer con versión de Laravel y PHP
+- Sin dependencia de Vite/Tailwind compilado: estilos inline en `<style>` tag.
+
+### TODOs / Próximos pasos
+- [ ] Si se agregan nuevos endpoints, actualizar las secciones en welcome.blade.php

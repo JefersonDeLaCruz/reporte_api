@@ -29,7 +29,7 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: api_cloudflared
-    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN} --protocol http2
     depends_on:
       - nginx
     networks:

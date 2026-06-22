@@ -17,3 +17,4 @@
 - [2026-06-13] [api] — RF-06: DELETE /reports/{report} ahora valida 5min de antigüedad y votos<3 antes de permitir retiro (403 si no cumple)
 - [2026-06-16] [api] — notificaciones push vía Firebase: POST /me/fcm-token para registrar token, NotificationService envía notificaciones automáticas cuando se crean reportes o cambian estados, credenciales en .firebase/ (gitignored)
 - [2026-06-18] [api] — GET /reports acepta bounding box (lat_min/lat_max/lng_min/lng_max) para viewport-based loading; whereBetween en lat/lng, compatible con filtros existentes: POST /me/fcm-token para registrar token, NotificationService envía notificaciones automáticas cuando se crean reportes o cambian estados, credenciales en .firebase/ (gitignored)
+- [2026-06-21] [general] — welcome.blade.php reemplazado: de la página genérica de Laravel a una landing page de la API con listado de endpoints, ciclo de vida de reportes, tipos de voto y link a /api/docs
