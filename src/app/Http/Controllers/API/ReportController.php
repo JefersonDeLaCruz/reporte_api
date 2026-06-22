@@ -238,6 +238,21 @@ class ReportController extends Controller
         }
     }
 
+
+    public function heatmap()
+    {
+        $points = \App\Models\Report::whereNotIn('status', ['archived', 'resolved'])
+            ->select('latitude', 'longitude')
+            ->latest()
+            ->limit(2000)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'points' => $points,
+        ]);
+    }
+
     private function authorizeOwner(Request $request, Report $report): void
     {
         if ($report->user_id !== $request->user()->id) {

@@ -24,6 +24,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
 Route::get('/reports', [ReportController::class, 'index']);
+Route::get('/reports/heatmap', [ReportController::class, 'heatmap']);
 Route::get('/reports/{report}', [ReportController::class, 'show']);
 Route::get('/reports/stream/changes', [ReportStreamController::class, 'changes']);
 
@@ -50,3 +51,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports/{report}/votes', [ReportVoteController::class, 'store']);
     Route::delete('/reports/{report}/votes/{type}', [ReportVoteController::class, 'destroy']);
 });
+
