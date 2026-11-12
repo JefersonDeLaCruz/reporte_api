@@ -89,7 +89,7 @@ class Report extends Model
 
     /**
      * Evalúa los umbrales de votos y aplica transiciones automáticas de
-     * estado (RF-11/RF-12) junto con el scoring asociado (RF-27).
+     * estado (RF-11/RF-12), y luego paga los premios pendientes (RF-27).
      */
     public function evaluateAutoStatus(): void
     {
@@ -97,24 +97,38 @@ class Report extends Model
             return;
         }
 
-        // Si el reporte ya pasó por "verified", sus confirm voters ya recibieron
-        // el bono RF-27; evita otorgarlo de nuevo si ahora pasa a "resolved".
-        $confirmVotersAwarded = $this->verified_at !== null;
-
         if ($this->status === 'pending' && $this->meetsConfirmThreshold()) {
             $this->transitionTo('verified');
-            $this->user?->addScore(self::SCORE_OWNER_VERIFIED);
-            $this->awardVoters('confirm', self::SCORE_CONFIRM_MATCH);
-            $confirmVotersAwarded = true;
         }
 
         if (in_array($this->status, ['pending', 'verified'], true) && $this->meetsResolveThreshold()) {
             $this->transitionTo('resolved');
-            $this->awardVoters('resolve', self::SCORE_RESOLVE_MATCH);
+        }
 
-            if (!$confirmVotersAwarded) {
-                $this->awardVoters('confirm', self::SCORE_CONFIRM_MATCH);
-            }
+        $this->grantStatusAwards();
+    }
+
+    /**
+     * Paga los premios que corresponden al estado actual (RF-27). Es idempotente gracias
+     * al libro score_awards, así que se puede llamar en cada voto y en cambios manuales:
+     * - verified o resolved: dueño +10 (una vez, sin importar por cuál estado llegó) y
+     *   cada votante "sigue ahí" +2, incluidos los que votan después de la verificación.
+     * - resolved: cada votante "ya se resolvió" +5.
+     */
+    public function grantStatusAwards(): void
+    {
+        if (!in_array($this->status, ['verified', 'resolved'], true)) {
+            return;
+        }
+
+        if ($this->user_id !== null) {
+            ScoreAward::grant($this->user_id, $this->id, ScoreAward::REASON_OWNER, self::SCORE_OWNER_VERIFIED);
+        }
+
+        $this->awardVoters('confirm', ScoreAward::REASON_CONFIRM_MATCH, self::SCORE_CONFIRM_MATCH);
+
+        if ($this->status === 'resolved') {
+            $this->awardVoters('resolve', ScoreAward::REASON_RESOLVE_MATCH, self::SCORE_RESOLVE_MATCH);
         }
     }
 
@@ -165,13 +179,13 @@ class Report extends Model
         $this->save();
     }
 
-    private function awardVoters(string $type, int $points): void
+    private function awardVoters(string $type, string $reason, int $points): void
     {
-        $userIds = $this->votes()->where('type', $type)->pluck('user_id');
-
-        User::whereIn('id', $userIds)->get()->each(
-            fn (User $user) => $user->addScore($points)
-        );
+        // foreach y no Collection::each: grant() devuelve false si el premio ya estaba
+        // pagado, y each() cortaría el recorrido ahí, dejando sin premio a los siguientes.
+        foreach ($this->votes()->where('type', $type)->pluck('user_id') as $userId) {
+            ScoreAward::grant((int) $userId, $this->id, $reason, $points);
+        }
     }
 
     /**

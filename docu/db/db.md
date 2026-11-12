@@ -178,3 +178,20 @@ Al archivar: `status = 'archived'`, `status_changed_at = now()`, `archived_at = 
 
 ### TODOs / Próximos pasos
 - [ ] Confirmar que el scheduler (`Schedule::command(...)->everyFiveMinutes()`) corre en producción (requiere `php artisan schedule:work` o cron con `schedule:run`)
+
+## [2026-11-12] Tienda de cosméticos y libro de premios
+
+### Archivos tocados
+- `src/database/migrations/2026_11_12_000001_create_points_shop.php` — `users.coins/is_admin/equipped_frame/equipped_title/equipped_theme`; tablas `cosmetics`, `user_cosmetics`, `score_awards`; `coins = score` para usuarios existentes; marca como pagados los premios de reportes ya verificados/resueltos; carga el catálogo
+- `src/database/seeders/CosmeticSeeder.php` — catálogo idempotente (13 artículos), llamado desde la migración y `DatabaseSeeder`
+- `src/app/Models/Cosmetic.php`, `ScoreAward.php` — nuevos
+- `src/app/Models/User.php` — `addScore` sube `score` y `coins`; `meetsLevel`, `ownedCosmetics`, atributo `cosmetics`
+- `src/app/Models/Report.php` — `grantStatusAwards()` idempotente vía `ScoreAward::grant`
+- `src/tests/Feature/ScoringTest.php`, `ShopTest.php` — 13 tests nuevos
+
+### Notas
+- `awardVoters` usa `foreach` y no `Collection::each`: `grant()` devuelve false si el premio ya estaba pagado y `each()` cortaba el recorrido ahí.
+- La migración ya inserta el catálogo: en deploy basta `php artisan migrate --force`.
+
+### TODOs / Próximos pasos
+- [ ] Historial de puntos para el usuario (la tabla `score_awards` ya lo guarda)

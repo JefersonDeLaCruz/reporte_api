@@ -883,3 +883,72 @@ Compatibles con los parámetros existentes: `status`, `category_id`, `updated_af
 
 ### TODOs / Próximos pasos
 - [ ] Agregar índice compuesto `(latitude, longitude)` en tabla `reports` para queries de bounding box a escala
+
+## [2026-11-12] Tienda de cosméticos y corrección del puntaje (RF-27)
+
+### Archivos tocados
+- `src/app/Http/Controllers/API/ShopController.php` — nuevo: catálogo, compra y equipar
+- `src/app/Http/Middleware/EnsureUserIsAdmin.php` — nuevo: middleware `admin` (`users.is_admin`)
+- `src/app/Http/Controllers/API/ReportController.php` — `updateStatus` reparte premios (`grantStatusAwards`) en transacción; autor con `equipped_frame/title`
+- `src/app/Http/Controllers/API/ProfileController.php`, `ReportStreamController.php` — autor con `score/level/equipped_*`
+- `src/routes/api.php` — rutas de tienda y `admin` en PATCH status
+- `src/bootstrap/app.php` — alias `admin`
+
+### Ruta: [GET] /shop
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | GET |
+| Auth        | Bearer Token |
+| Body        | N/A |
+| Respuesta   | `{ success, coins: int, score: int, level: string, items: [{ slug, type: frame\|title\|theme, name, description, price, min_level, value: object, owned: bool, equipped: bool, locked: bool }] }` |
+| Estado      | [x] lista |
+| Notas       | `locked` = el nivel del usuario no alcanza `min_level` |
+
+### Ruta: [POST] /shop/{slug}/purchase
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | POST |
+| Auth        | Bearer Token |
+| Body        | N/A |
+| Respuesta   | `201 { success, message, coins: int, slug }` · `409` ya comprado · `403` nivel insuficiente · `422` sin saldo `{ coins, price }` |
+| Estado      | [x] lista |
+| Notas       | Descuenta solo `coins`; `score` y nivel no cambian. Bloquea la fila del usuario (`lockForUpdate`) |
+
+### Ruta: [PUT] /me/cosmetics
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | PUT |
+| Auth        | Bearer Token |
+| Body        | `{ frame?: slug\|null, title?: slug\|null, theme?: slug\|null }` (`""` también quita) |
+| Respuesta   | `{ success, user }` con `user.cosmetics` resuelto · `422` si no posee el artículo o el tipo no coincide |
+| Estado      | [x] lista |
+| Notas       | Solo toca los tipos enviados |
+
+### Ruta: [PATCH] /reports/{report}/status (cambio)
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | PATCH |
+| Auth        | Bearer Token + `admin` |
+| Body        | `{ status: pending\|verified\|resolved\|archived }` |
+| Respuesta   | igual que antes · `403` si no es admin |
+| Estado      | [x] lista |
+| Notas       | Ahora reparte los mismos premios que la transición automática (idempotente) |
+
+### Cambio en respuestas existentes
+- Todo `user` serializado incluye `cosmetics: { frame, title, theme }` (cada uno `null` o `{ slug, name, ...value }`). En reportes solo se cargan marco y título; el tema solo viaja en `/me`.
+- `/me` incluye `coins`. `is_admin` y `equipped_*` están ocultos.
+
+### Reglas de puntaje (RF-27, corregidas)
+- Dueño +10 cuando el reporte llega a verified **o** resolved (una sola vez).
+- Votante confirm +2 mientras el reporte esté verified/resolved, incluidos los que votan después de verificarse.
+- Votante resolve +5 al resolverse.
+- Cada premio se registra en `score_awards` (único por usuario+reporte+motivo): retirar y volver a votar no paga dos veces.
+
+### TODOs / Próximos pasos
+- [ ] Aplicar middleware `admin` a `POST/PUT/DELETE /categories` y `GET /users`
+- [ ] Marcar al menos un usuario como admin en producción (`UPDATE users SET is_admin=1 WHERE email=...`)
+- [ ] Agregar la tienda a `GET /api/docs` (DocsController)
