@@ -8,6 +8,7 @@ use App\Http\Controllers\API\ProfileController;
 use App\Http\Controllers\API\ReportController;
 use App\Http\Controllers\API\ReportStreamController;
 use App\Http\Controllers\API\ReportVoteController;
+use App\Http\Controllers\API\ShopController;
 use Illuminate\Support\Facades\Route;
 
 // Docs (auto-documentación de endpoints)
@@ -37,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/me/fcm-token', [ProfileController::class, 'updateFcmToken']);
     Route::get('/me/reports', [ProfileController::class, 'reports']);
     Route::get('/me/votes', [ProfileController::class, 'votes']);
+    Route::put('/me/cosmetics', [ShopController::class, 'equip']);
+
+    // Tienda de cosméticos (saldo: users.coins)
+    Route::get('/shop', [ShopController::class, 'index']);
+    Route::post('/shop/{cosmetic:slug}/purchase', [ShopController::class, 'purchase']);
     Route::get('/users', [AuthController::class, 'getAllUser']);
 
     Route::post('/categories', [CategoryController::class, 'store']);
@@ -46,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{report}', [ReportController::class, 'update']);
     Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
-    Route::patch('/reports/{report}/status', [ReportController::class, 'updateStatus']);
+    Route::patch('/reports/{report}/status', [ReportController::class, 'updateStatus'])->middleware('admin');
 
     Route::post('/reports/{report}/votes', [ReportVoteController::class, 'store']);
     Route::delete('/reports/{report}/votes/{type}', [ReportVoteController::class, 'destroy']);

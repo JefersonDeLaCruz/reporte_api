@@ -20,7 +20,7 @@ class ReportStreamController extends Controller
                 $q->where('created_at', '>=', $since)
                   ->orWhere('updated_at', '>=', $since);
             })
-            ->with(['category', 'user:id,name,avatar_url'])
+            ->with(['category', 'user:id,name,avatar_url,score,level,equipped_frame,equipped_title'])
             ->orderBy('created_at', 'desc')
             ->limit($limit)
             ->get();

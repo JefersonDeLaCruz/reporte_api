@@ -38,9 +38,11 @@ Es la API que usa la app Android Reporte Ciudadano. Guarda los reportes de probl
 
 El archivado lo hace el comando `reports:archive-stale`, que el servicio `scheduler` corre cada 5 minutos.
 
-**Puntaje:** +10 al autor cuando su reporte se verifica, +2 por voto "Sigue ahí" acertado y +5 por voto "Ya se resolvió" acertado.
+**Puntaje:** +10 al autor cuando su reporte se verifica o se resuelve (una sola vez), +2 por voto "Sigue ahí" acertado (también si votas después de que se verificó) y +5 por voto "Ya se resolvió" acertado. Cada premio se registra en la tabla `score_awards`, así que nunca se paga dos veces aunque retires el voto y vuelvas a votar.
 
 **Niveles:** Nuevo (0), Colaborador (20 puntos), Guardián (100) y Experto (300).
+
+**Tienda:** cada punto ganado suma a dos contadores: `score` (define el nivel, nunca baja) y `coins` (saldo para gastar). Comprar un marco de avatar, un título o un color de barra solo descuenta `coins`. El catálogo vive en la tabla `cosmetics` (ver [`CosmeticSeeder`](src/database/seeders/CosmeticSeeder.php)); marco y título equipados se ven en los reportes de cada usuario.
 
 Los valores están como constantes en [`Report.php`](src/app/Models/Report.php) y [`User.php`](src/app/Models/User.php).
 
@@ -71,6 +73,14 @@ Todas las rutas empiezan con `/api`. Las marcadas con 🔒 necesitan el encabeza
 | POST | `/me/fcm-token` 🔒 | Registrar el token de notificaciones |
 | GET | `/me/reports` 🔒 | Mis reportes |
 | GET | `/me/votes` 🔒 | Mis votos |
+| PUT | `/me/cosmetics` 🔒 | Equipar o quitar cosméticos: `frame`, `title`, `theme` con un slug propio, o `null`/`""` para quitarlo |
+
+**Tienda**
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/shop` 🔒 | Catálogo con `owned`/`equipped`/`locked` por artículo, más `coins`, `score` y `level` |
+| POST | `/shop/{slug}/purchase` 🔒 | Comprar. `201` ok, `409` ya lo tienes, `403` nivel insuficiente, `422` sin puntos suficientes |
 
 **Reportes y votos**
 
@@ -83,7 +93,7 @@ Todas las rutas empiezan con `/api`. Las marcadas con 🔒 necesitan el encabeza
 | POST | `/reports` 🔒 | Crear reporte |
 | PUT | `/reports/{id}` 🔒 | Editar reporte propio |
 | DELETE | `/reports/{id}` 🔒 | Retirar reporte propio |
-| PATCH | `/reports/{id}/status` 🔒 | Cambiar estado manualmente |
+| PATCH | `/reports/{id}/status` 🔒 | Cambiar estado manualmente (solo administradores, `users.is_admin`; reparte los mismos puntos que el cambio automático) |
 | POST | `/reports/{id}/votes` 🔒 | Votar: `type` = `confirm` o `resolve`, más tu `latitude` y `longitude` |
 | DELETE | `/reports/{id}/votes/{type}` 🔒 | Quitar mi voto |
 

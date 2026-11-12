@@ -83,7 +83,7 @@ class ProfileController extends Controller
     {
         $reports = Report::query()
             ->where('user_id', $request->user()->id)
-            ->with(['user:id,name,avatar_url', 'category'])
+            ->with(['user:id,name,avatar_url,score,level,equipped_frame,equipped_title', 'category'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->latest()
             ->paginate($request->integer('per_page', 15));

@@ -9,6 +9,7 @@ use App\Models\Report;
 use App\Models\ReportVote;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -17,7 +18,7 @@ class ReportController extends Controller
     public function index(Request $request)
     {
         $reports = Report::query()
-            ->with(['user:id,name,avatar_url,score,level', 'category'])
+            ->with(['user:id,name,avatar_url,score,level,equipped_frame,equipped_title', 'category'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('updated_after'), fn ($q) => $q->where('updated_at', '>', $request->date('updated_after')))
@@ -51,7 +52,7 @@ class ReportController extends Controller
 
     public function show(Request $request, Report $report)
     {
-        $report->load(['user:id,name,avatar_url,score,level', 'category']);
+        $report->load(['user:id,name,avatar_url,score,level,equipped_frame,equipped_title', 'category']);
 
         $userVote = null;
         $userVotedAt = null;
@@ -128,7 +129,7 @@ class ReportController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Reporte creado',
-                'report' => $report->load(['user:id,name,avatar_url', 'category']),
+                'report' => $report->load(['user:id,name,avatar_url,score,level,equipped_frame,equipped_title', 'category']),
             ], 201);
         } catch (ValidationException $e) {
             return response()->json([
@@ -162,7 +163,7 @@ class ReportController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Reporte actualizado',
-                'report' => $report->fresh(['user:id,name,avatar_url', 'category']),
+                'report' => $report->fresh(['user:id,name,avatar_url,score,level,equipped_frame,equipped_title', 'category']),
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -204,7 +205,8 @@ class ReportController extends Controller
     }
 
     /**
-     * Cambia el estado del reporte (ciclo de vida: pending -> verified -> resolved -> archived).
+     * Cambia el estado del reporte a mano (solo administradores, middleware `admin`).
+     * Ciclo de vida: pending -> verified -> resolved -> archived.
      */
     public function updateStatus(Request $request, Report $report)
     {
@@ -229,7 +231,11 @@ class ReportController extends Controller
                 $report->{$timestampField} = now();
             }
 
-            $report->save();
+            // Mismos premios RF-27 que la transición automática (idempotente vía score_awards).
+            DB::transaction(function () use ($report) {
+                $report->save();
+                $report->grantStatusAwards();
+            });
 
             ReportStatusChanged::dispatch($report, $previousStatus);
 
