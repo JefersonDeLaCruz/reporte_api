@@ -43,11 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tienda de cosméticos (saldo: users.coins)
     Route::get('/shop', [ShopController::class, 'index']);
     Route::post('/shop/{cosmetic:slug}/purchase', [ShopController::class, 'purchase']);
-    Route::get('/users', [AuthController::class, 'getAllUser']);
-
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{category}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{report}', [ReportController::class, 'update']);

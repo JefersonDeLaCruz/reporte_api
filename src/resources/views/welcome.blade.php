@@ -287,21 +287,6 @@
                         <span class="path">/categories/<span class="param">{id}</span></span>
                         <span class="desc">Detalle</span>
                     </div>
-                    <div class="endpoint">
-                        <span class="method post">POST</span>
-                        <span class="path">/categories</span>
-                        <span class="desc lock">🔒 Crear</span>
-                    </div>
-                    <div class="endpoint">
-                        <span class="method put">PUT</span>
-                        <span class="path">/categories/<span class="param">{id}</span></span>
-                        <span class="desc lock">🔒 Actualizar</span>
-                    </div>
-                    <div class="endpoint">
-                        <span class="method delete">DELETE</span>
-                        <span class="path">/categories/<span class="param">{id}</span></span>
-                        <span class="desc lock">🔒 Eliminar</span>
-                    </div>
                 </div>
             </div>
 

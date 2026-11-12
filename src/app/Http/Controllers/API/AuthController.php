@@ -163,14 +163,4 @@ class AuthController extends Controller
             'user' => $request->user(),
         ]);
     }
-
-    public function getAllUser()
-    {
-        $users = User::select('id', 'name', 'email', 'avatar_url', 'score', 'level', 'created_at')->get();
-
-        return response()->json([
-            'success' => true,
-            'users' => $users,
-        ]);
-    }
 }

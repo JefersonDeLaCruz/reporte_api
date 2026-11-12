@@ -972,4 +972,40 @@ El estado de un reporte solo cambia por votos (RF-11/RF-12) y por el archivado a
 - `src/tests/Feature/ScoringTest.php` — tests de admin reemplazados por uno que verifica el 404
 
 ### TODOs / Próximos pasos
-- [ ] Decidir qué hacer con `POST/PUT/DELETE /categories` y `GET /users`, abiertos a cualquier usuario autenticado (sin roles)
+- [x] `POST/PUT/DELETE /categories` y `GET /users` eliminados (ver entrada siguiente)
+
+## [2026-11-12] Eliminadas rutas sin uso: escritura de categorías y lista de usuarios
+
+No hay roles y la app no las usaba: cualquier usuario con sesión podía crear/editar/borrar categorías (los IDs están fijos en la app, borrar una rompía los reportes) o listar los correos de todos los usuarios.
+
+### Ruta: [GET] /users
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | GET |
+| Auth        | — |
+| Body        | — |
+| Respuesta   | `404` (ruta eliminada) |
+| Estado      | eliminada |
+| Notas       | Exponía id, nombre y correo de todos los usuarios |
+
+### Ruta: [POST/PUT/DELETE] /categories[/{id}]
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | POST / PUT / DELETE |
+| Auth        | — |
+| Body        | — |
+| Respuesta   | `405` (solo quedan los GET) |
+| Estado      | eliminada |
+| Notas       | Las categorías se cambian por seeder o migración. `GET /categories` y `GET /categories/{id}` siguen públicos |
+
+### Archivos tocados
+- `src/routes/api.php` — rutas quitadas
+- `src/app/Http/Controllers/API/CategoryController.php` — quitados `store`, `update`, `destroy`
+- `src/app/Http/Controllers/API/AuthController.php` — quitado `getAllUser`
+- `src/app/Http/Controllers/API/DocsController.php`, `src/resources/views/welcome.blade.php` — quitadas de la documentación
+- `src/tests/Feature/RemovedRoutesTest.php` — nuevo
+
+### TODOs / Próximos pasos
+- [ ] Ninguno

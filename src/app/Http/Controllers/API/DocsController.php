@@ -84,15 +84,6 @@ class DocsController extends Controller
                     'body' => null,
                     'response' => ['success' => true, 'user' => ['id', 'name', 'email', 'avatar_url', 'score', 'level']],
                 ],
-                [
-                    'group' => 'Authentication',
-                    'method' => 'GET',
-                    'path' => '/users',
-                    'auth' => true,
-                    'description' => 'Listar todos los usuarios (admin)',
-                    'body' => null,
-                    'response' => ['success' => true, 'users' => '[]'],
-                ],
 
                 // ==================== PERFIL ====================
                 [
@@ -193,37 +184,7 @@ class DocsController extends Controller
                     'description' => 'Obtener detalle de una categoría',
                     'response' => ['success' => true, 'category' => '{ id, name, slug, icon, active }'],
                 ],
-                [
-                    'group' => 'Categories',
-                    'method' => 'POST',
-                    'path' => '/categories',
-                    'auth' => true,
-                    'description' => 'Crear nueva categoría',
-                    'body' => [
-                        'name' => 'string (required)',
-                        'slug' => 'string (required, unique)',
-                        'icon' => 'string (required)',
-                        'active' => 'boolean (optional, default: true)',
-                    ],
                     'response' => ['success' => true, 'message' => 'Category created', 'category' => '{}'],
-                ],
-                [
-                    'group' => 'Categories',
-                    'method' => 'PUT',
-                    'path' => '/categories/{id}',
-                    'auth' => true,
-                    'description' => 'Actualizar categoría',
-                    'body' => ['name?', 'slug?', 'icon?', 'active?'],
-                    'response' => ['success' => true, 'message' => 'Category updated', 'category' => '{}'],
-                ],
-                [
-                    'group' => 'Categories',
-                    'method' => 'DELETE',
-                    'path' => '/categories/{id}',
-                    'auth' => true,
-                    'description' => 'Eliminar categoría',
-                    'body' => null,
-                    'response' => ['success' => true, 'message' => 'Category deleted'],
                 ],
 
                 // ==================== REPORTES ====================

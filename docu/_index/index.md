@@ -20,3 +20,4 @@
 - [2026-06-21] [general] — welcome.blade.php reemplazado: de la página genérica de Laravel a una landing page de la API con listado de endpoints, ciclo de vida de reportes, tipos de voto y link a /api/docs
 - [2026-11-12] [db][api] — tienda de cosméticos (GET /shop, POST /shop/{slug}/purchase, PUT /me/cosmetics), saldo `coins` separado de `score`, libro `score_awards` y reglas RF-27 corregidas; PATCH /reports/{id}/status solo admin
 - [2026-11-12] [api][db] — eliminado PATCH /reports/{id}/status, el middleware admin y users.is_admin: el estado solo cambia por votos
+- [2026-11-12] [api] — eliminadas rutas sin uso y sin control de roles: GET /users y POST/PUT/DELETE /categories
