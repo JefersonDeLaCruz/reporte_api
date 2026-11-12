@@ -195,3 +195,13 @@ Al archivar: `status = 'archived'`, `status_changed_at = now()`, `archived_at = 
 
 ### TODOs / Próximos pasos
 - [ ] Historial de puntos para el usuario (la tabla `score_awards` ya lo guarda)
+
+## [2026-11-12] Eliminada la columna users.is_admin
+
+### Archivos tocados
+- `src/database/migrations/2026_11_12_000002_drop_is_admin_from_users.php` — borra `users.is_admin` si existe (producción ya la tenía)
+- `src/database/migrations/2026_11_12_000001_create_points_shop.php` — ya no la crea en instalaciones nuevas
+- `src/app/Models/User.php` — quitado de casts y hidden
+
+### TODOs / Próximos pasos
+- [ ] Ninguno

@@ -12,7 +12,6 @@ return new class extends Migration
      * Tienda de cosméticos (RF-27 ampliado):
      * - users.coins: saldo gastable; sube junto con score pero solo baja al comprar.
      *   El nivel sigue dependiendo de score, así que comprar no baja de rango.
-     * - users.is_admin: habilita el cambio manual de estado de reportes.
      * - users.equipped_*: slug del cosmético equipado por tipo.
      * - cosmetics / user_cosmetics: catálogo y compras.
      * - score_awards: libro de premios; la unicidad (user, report, reason) impide pagar dos veces.
@@ -21,8 +20,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedInteger('coins')->default(0)->after('score');
-            $table->boolean('is_admin')->default(false)->after('level');
-            $table->string('equipped_frame', 64)->nullable()->after('is_admin');
+            $table->string('equipped_frame', 64)->nullable()->after('level');
             $table->string('equipped_title', 64)->nullable()->after('equipped_frame');
             $table->string('equipped_theme', 64)->nullable()->after('equipped_title');
         });
@@ -115,7 +113,7 @@ return new class extends Migration
         Schema::dropIfExists('cosmetics');
 
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['coins', 'is_admin', 'equipped_frame', 'equipped_title', 'equipped_theme']);
+            $table->dropColumn(['coins', 'equipped_frame', 'equipped_title', 'equipped_theme']);
         });
     }
 };

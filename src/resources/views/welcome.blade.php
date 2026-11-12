@@ -249,11 +249,6 @@
                         <span class="desc lock">🔒 Editar reporte</span>
                     </div>
                     <div class="endpoint">
-                        <span class="method patch">PATCH</span>
-                        <span class="path">/reports/<span class="param">{id}</span>/status</span>
-                        <span class="desc lock">🔒 Cambiar estado</span>
-                    </div>
-                    <div class="endpoint">
                         <span class="method delete">DELETE</span>
                         <span class="path">/reports/<span class="param">{id}</span></span>
                         <span class="desc lock">🔒 Eliminar reporte</span>

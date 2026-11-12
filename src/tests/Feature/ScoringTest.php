@@ -126,38 +126,18 @@ class ScoringTest extends TestCase
             ->assertJsonPath('user.score', 20)
             ->assertJsonPath('user.coins', 20)
             ->assertJsonPath('user.level', 'colaborador')
-            ->assertJsonMissingPath('user.is_admin');
+            ->assertJsonPath('user.cosmetics.frame', null);
     }
 
-    public function test_manual_status_change_requires_admin(): void
+    public function test_status_cannot_be_changed_manually(): void
     {
         $report = Report::factory()->create();
 
         Sanctum::actingAs(User::factory()->create());
-        $this->patchJson("/api/reports/{$report->id}/status", ['status' => 'verified'])->assertForbidden();
+        $this->patchJson("/api/reports/{$report->id}/status", ['status' => 'verified'])
+            ->assertNotFound(); // la ruta ya no existe: el estado solo cambia por votos
+
         $this->assertSame('pending', $report->fresh()->status);
-    }
-
-    public function test_manual_status_change_pays_same_awards(): void
-    {
-        $report = Report::factory()->create();
-        $confirmer = User::factory()->create();
-        $resolver = User::factory()->create();
-        $this->vote($confirmer, $report, 'confirm');
-        $this->vote($resolver, $report, 'resolve');
-
-        $admin = User::factory()->create();
-        $admin->forceFill(['is_admin' => true])->save();
-        Sanctum::actingAs($admin);
-
-        $this->patchJson("/api/reports/{$report->id}/status", ['status' => 'resolved'])->assertOk();
-
-        $this->assertSame(10, $report->user->fresh()->score);
-        $this->assertSame(2, $confirmer->fresh()->score);
-        $this->assertSame(5, $resolver->fresh()->score);
-
-        // Repetir el cambio no vuelve a pagar
-        $this->patchJson("/api/reports/{$report->id}/status", ['status' => 'resolved'])->assertOk();
-        $this->assertSame(10, $report->user->fresh()->score);
+        $this->assertSame(0, $report->user->fresh()->score);
     }
 }

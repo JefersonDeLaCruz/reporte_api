@@ -52,7 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{report}', [ReportController::class, 'update']);
     Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
-    Route::patch('/reports/{report}/status', [ReportController::class, 'updateStatus'])->middleware('admin');
 
     Route::post('/reports/{report}/votes', [ReportVoteController::class, 'store']);
     Route::delete('/reports/{report}/votes/{type}', [ReportVoteController::class, 'destroy']);

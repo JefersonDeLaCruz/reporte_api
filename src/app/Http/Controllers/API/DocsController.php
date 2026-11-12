@@ -298,16 +298,6 @@ class DocsController extends Controller
                     'body' => null,
                     'response' => ['success' => true, 'message' => 'Reporte eliminado'],
                 ],
-                [
-                    'group' => 'Reports',
-                    'method' => 'PATCH',
-                    'path' => '/reports/{id}/status',
-                    'auth' => true,
-                    'description' => 'Cambiar estado del reporte (pending → verified → resolved → archived)',
-                    'body' => ['status' => 'pending|verified|resolved|archived (required)'],
-                    'response' => ['success' => true, 'message' => 'Estado actualizado', 'report' => '{}'],
-                    'notes' => 'Actualiza status_changed_at y el timestamp específico (verified_at, resolved_at, archived_at)',
-                ],
 
                 // ==================== REAL-TIME & STREAMING ====================
                 [

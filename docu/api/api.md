@@ -949,6 +949,27 @@ Compatibles con los parámetros existentes: `status`, `category_id`, `updated_af
 - Cada premio se registra en `score_awards` (único por usuario+reporte+motivo): retirar y volver a votar no paga dos veces.
 
 ### TODOs / Próximos pasos
-- [ ] Aplicar middleware `admin` a `POST/PUT/DELETE /categories` y `GET /users`
-- [ ] Marcar al menos un usuario como admin en producción (`UPDATE users SET is_admin=1 WHERE email=...`)
 - [ ] Agregar la tienda a `GET /api/docs` (DocsController)
+
+## [2026-11-12] Eliminado el cambio manual de estado
+
+El estado de un reporte solo cambia por votos (RF-11/RF-12) y por el archivado automático (RF-13/RF-18). No hay roles de administrador.
+
+### Ruta: [PATCH] /reports/{report}/status
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | PATCH |
+| Auth        | — |
+| Body        | — |
+| Respuesta   | `404` (la ruta ya no existe) |
+| Estado      | eliminada |
+| Notas       | La app nunca la usó. Se quitaron también `ReportController@updateStatus`, el middleware `admin`, su entrada en `/api/docs` y en la landing |
+
+### Archivos tocados
+- `src/routes/api.php`, `src/bootstrap/app.php`, `src/app/Http/Controllers/API/ReportController.php`, `DocsController.php`, `src/resources/views/welcome.blade.php`
+- `src/app/Http/Middleware/EnsureUserIsAdmin.php` — eliminado
+- `src/tests/Feature/ScoringTest.php` — tests de admin reemplazados por uno que verifica el 404
+
+### TODOs / Próximos pasos
+- [ ] Decidir qué hacer con `POST/PUT/DELETE /categories` y `GET /users`, abiertos a cualquier usuario autenticado (sin roles)

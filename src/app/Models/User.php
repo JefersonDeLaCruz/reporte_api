@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'google_id', 'avatar_url', 'score', 'level', 'fcm_token', 'onboarding_done'])]
-#[Hidden(['password', 'remember_token', 'is_admin', 'equipped_frame', 'equipped_title', 'equipped_theme'])]
+#[Hidden(['password', 'remember_token', 'equipped_frame', 'equipped_title', 'equipped_theme'])]
 #[Appends(['cosmetics'])]
 class User extends Authenticatable
 {
@@ -53,7 +53,6 @@ class User extends Authenticatable
             'onboarding_done' => 'boolean',
             'score' => 'integer',
             'coins' => 'integer',
-            'is_admin' => 'boolean',
         ];
     }
 

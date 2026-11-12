@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\API;
 
 use App\Events\ReportCreated;
-use App\Events\ReportStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Report;
 use App\Models\ReportVote;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -191,59 +189,6 @@ class ReportController extends Controller
             'message' => 'Reporte eliminado',
         ]);
     }
-
-    /**
-     * Cambia el estado del reporte a mano (solo administradores, middleware `admin`).
-     * Ciclo de vida: pending -> verified -> resolved -> archived.
-     */
-    public function updateStatus(Request $request, Report $report)
-    {
-        try {
-            $data = $request->validate([
-                'status' => 'required|in:pending,verified,resolved,archived',
-            ]);
-
-            $previousStatus = $report->status;
-            $status = $data['status'];
-            $report->status = $status;
-            $report->status_changed_at = now();
-
-            $timestampField = match ($status) {
-                'verified' => 'verified_at',
-                'resolved' => 'resolved_at',
-                'archived' => 'archived_at',
-                default => null,
-            };
-
-            if ($timestampField) {
-                $report->{$timestampField} = now();
-            }
-
-            // Mismos premios RF-27 que la transición automática (idempotente vía score_awards).
-            DB::transaction(function () use ($report) {
-                $report->save();
-                $report->grantStatusAwards();
-            });
-
-            ReportStatusChanged::dispatch($report, $previousStatus);
-
-            $notificationService = new NotificationService();
-            $notificationService->notifyVoters($report, $previousStatus);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Estado actualizado',
-                'report' => $report,
-            ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
-        }
-    }
-
 
     public function heatmap()
     {

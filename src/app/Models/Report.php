@@ -109,8 +109,8 @@ class Report extends Model
     }
 
     /**
-     * Paga los premios que corresponden al estado actual (RF-27). Es idempotente gracias
-     * al libro score_awards, así que se puede llamar en cada voto y en cambios manuales:
+     * Paga los premios que corresponden al estado actual (RF-27). Se llama tras cada voto;
+     * el estado solo cambia por votos. Es idempotente gracias al libro score_awards:
      * - verified o resolved: dueño +10 (una vez, sin importar por cuál estado llegó) y
      *   cada votante "sigue ahí" +2, incluidos los que votan después de la verificación.
      * - resolved: cada votante "ya se resolvió" +5.
