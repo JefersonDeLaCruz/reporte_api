@@ -34,7 +34,7 @@ class CosmeticSeeder extends Seeder
             ['titulo-vecino', 'title', 'Vecino atento', 'Tu primer título', 20, null, ['text' => 'Vecino atento', 'color' => '#246A4B']],
             ['titulo-ojo', 'title', 'Ojo de águila', 'Nada se te escapa', 50, null, ['text' => 'Ojo de águila', 'color' => '#2F80ED']],
             ['titulo-guardian', 'title', 'Guardián del barrio', 'Reconocimiento a tu constancia', 150, 'guardian', ['text' => 'Guardián del barrio', 'color' => '#E0A100']],
-            ['titulo-leyenda', 'title', 'Leyenda de San Miguel', 'El título más alto', 500, 'experto', ['text' => 'Leyenda de San Miguel', 'color' => '#7B4FD6']],
+            ['titulo-leyenda', 'title', 'Leyenda ciudadana', 'El título más alto', 500, 'experto', ['text' => 'Leyenda ciudadana', 'color' => '#7B4FD6']],
 
             // Color de la barra flotante
             ['tema-menta', 'theme', 'Menta', 'Barra en verde suave', 40, null, ['color' => '#CFEBDD']],

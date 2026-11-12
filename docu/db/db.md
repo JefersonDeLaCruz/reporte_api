@@ -205,3 +205,16 @@ Al archivar: `status = 'archived'`, `status_changed_at = now()`, `archived_at = 
 
 ### TODOs / Próximos pasos
 - [ ] Ninguno
+
+## [2026-11-12] Título "Leyenda de San Miguel" → "Leyenda ciudadana"
+
+La app sirve para reportar en cualquier lugar; el título no debe nombrar una ciudad. Se conserva el slug `titulo-leyenda`, así que quien lo tenga comprado o equipado lo ve con el texto nuevo.
+
+### Archivos tocados
+- `src/database/seeders/CosmeticSeeder.php` — nombre y texto del título
+
+### Notas
+- Para aplicar cambios del catálogo en un servidor ya migrado: `docker exec api_app php artisan db:seed --class=CosmeticSeeder --force` (idempotente, `updateOrCreate` por slug).
+
+### TODOs / Próximos pasos
+- [ ] Ninguno
