@@ -1,2 +1,5 @@
 DOCKER_SETUP.md
 .env
+
+*.md    
+!README.md
