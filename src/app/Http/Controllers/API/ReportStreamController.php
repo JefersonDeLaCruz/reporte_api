@@ -10,9 +10,16 @@ class ReportStreamController extends Controller
 {
     public function changes(Request $request)
     {
-        $since = $request->has('since')
-            ? $request->date('since')
-            : now()->subMinutes(5);
+        // Hora del servidor tomada ANTES de consultar: el cliente la manda como `since` en la
+        // siguiente llamada, así un reporte creado durante esta consulta no se pierde.
+        $timestamp = now();
+
+        // Las fechas se guardan en la zona de la app (America/El_Salvador) y la comparación
+        // en SQL no convierte zonas: un `since` en UTC ("...Z", el primer sondeo de la app)
+        // quedaba 6 h en el futuro y no devolvía nada. Se pasa a la zona de la app.
+        $since = $request->filled('since')
+            ? $request->date('since')->setTimezone(config('app.timezone'))
+            : $timestamp->copy()->subMinutes(5);
         $limit = $request->integer('limit', 50);
 
         $reports = Report::query()
@@ -27,7 +34,7 @@ class ReportStreamController extends Controller
 
         return response()->json([
             'success' => true,
-            'timestamp' => now()->toIso8601String(),
+            'timestamp' => $timestamp->toIso8601String(),
             'count' => $reports->count(),
             'reports' => $reports->map(fn (Report $report) => [
                 'id' => $report->id,

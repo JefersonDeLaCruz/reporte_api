@@ -1084,3 +1084,26 @@ Vista web con mapa (Leaflet + OpenStreetMap) para crear reportes en cualquier co
 ### TODOs / Próximos pasos
 - [ ] Si la lista de usuarios crece mucho (miles), cambiar el `<select>` de autor por un buscador
 - [ ] Mostrar en el mapa los reportes activos existentes para no duplicar pines
+
+## [2026-11-13] Fix: /reports/stream/changes perdía reportes cuando `since` venía en UTC
+
+La app Android hace el primer sondeo con `since` en UTC (`2026-11-13T20:00:46Z`, de `ReportPoller.nowIso()`). Las fechas se guardan en hora de El Salvador y la comparación en SQL no convertía zonas, así que ese `since` quedaba 6 h en el futuro y no devolvía nada: los pines creados en los primeros ~30 s tras abrir el mapa no aparecían hasta mover el mapa o reabrirlo.
+
+### Ruta: [GET] /reports/stream/changes
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | GET |
+| Auth        | No |
+| Body        | N/A. Query: `since` (ISO 8601, cualquier zona; por defecto hace 5 min), `limit` (por defecto 50) |
+| Respuesta   | `{ success, timestamp, count, reports: [...] }` |
+| Estado      | [x] lista |
+| Notas       | `since` se convierte a `config('app.timezone')` antes de comparar. `timestamp` se toma antes de la consulta, para no saltarse reportes creados mientras corre. Sigue sin haber tiempo real: la app sondea cada 30 s |
+
+### Archivos tocados
+- `src/app/Http/Controllers/API/ReportStreamController.php` — conversión de zona de `since` y `timestamp` tomado antes de consultar
+- `src/tests/Feature/ReportStreamTest.php` — nuevo (3 tests; el de UTC falla con el código anterior)
+
+### TODOs / Próximos pasos
+- [ ] App Android: evaluar bajar `ReportPoller.INTERVAL_MS` de 30 000 a 10 000 si se quiere que los pines aparezcan antes
+- [ ] Un `since` mal formado sigue dando 500; validarlo y responder 422

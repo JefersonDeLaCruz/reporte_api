@@ -24,3 +24,4 @@
 - [2026-11-12] [db] — título de tienda "Leyenda de San Miguel" renombrado a "Leyenda ciudadana" (sin referencia a una ciudad)
 - [2026-11-13] [api] — panel web /admin/users (HTTP Basic con ADMIN_USER/ADMIN_PASSWORD): lista y búsqueda de usuarios y formulario para sumarles puntos
 - [2026-11-13] [api] — panel admin /admin/reports/create: mapa para poner un pin (reporte pending) en cualquier coordenada a nombre de cualquier usuario
+- [2026-11-13] [api] — fix GET /reports/stream/changes: `since` en UTC se convierte a la zona de la app (antes se perdían los reportes del primer sondeo)
