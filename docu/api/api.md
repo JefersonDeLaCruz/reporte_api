@@ -1009,3 +1009,41 @@ No hay roles y la app no las usaba: cualquier usuario con sesión podía crear/e
 
 ### TODOs / Próximos pasos
 - [ ] Ninguno
+
+## [2026-11-13] Panel web de administración: lista de usuarios y sumar puntos
+
+Vista web (Blade, no JSON) en `/admin/users`. No hay roles en `users`, así que se protege con HTTP Basic contra `ADMIN_USER` / `ADMIN_PASSWORD` del `.env`. Si alguna de las dos falta, el panel responde 404 (desactivado por defecto).
+
+### Ruta: [GET] /admin/users
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | GET |
+| Auth        | HTTP Basic (`ADMIN_USER` / `ADMIN_PASSWORD`) |
+| Body        | N/A. Query: `q` (busca en nombre o correo), `page` |
+| Respuesta   | HTML: tabla con id, nombre, correo, nivel, score y coins; 25 por página, ordenada por score desc |
+| Estado      | [x] lista |
+| Notas       | 401 con credenciales incorrectas; 404 si no hay credenciales configuradas |
+
+### Ruta: [POST] /admin/users/{user}/points
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | POST (formulario con CSRF) |
+| Auth        | HTTP Basic (`ADMIN_USER` / `ADMIN_PASSWORD`) |
+| Body        | `{ points: integer 1..10000 }` |
+| Respuesta   | Redirect a la lista con mensaje de éxito, o error de validación |
+| Estado      | [x] lista |
+| Notas       | Usa `User::addScore`: sube `score` y `coins` y recalcula el nivel. No crea fila en `score_awards` (exige `report_id`); queda registrado en el log como `admin.add_points` |
+
+### Archivos tocados
+- `src/routes/web.php` — grupo `/admin` con las dos rutas
+- `src/app/Http/Middleware/AdminBasicAuth.php` — nuevo: HTTP Basic contra la config
+- `src/app/Http/Controllers/Admin/UserPointsController.php` — nuevo: `index` y `addPoints`
+- `src/resources/views/admin/users.blade.php` — nueva vista
+- `src/config/services.php`, `src/.env.example` — `ADMIN_USER` / `ADMIN_PASSWORD`
+- `src/tests/Feature/AdminUserPointsTest.php` — nuevo (5 tests)
+
+### TODOs / Próximos pasos
+- [ ] Definir `ADMIN_USER` y `ADMIN_PASSWORD` en el `.env` del servidor para activar el panel
+- [ ] Si hace falta historial visible de puntos manuales, crear tabla `manual_score_awards` (hoy solo queda en el log)

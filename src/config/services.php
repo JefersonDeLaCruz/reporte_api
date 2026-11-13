@@ -32,6 +32,12 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
     ],
 
+    // Panel /admin (HTTP Basic). Si falta alguno de los dos, el panel responde 404.
+    'admin' => [
+        'user' => env('ADMIN_USER'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -22,3 +22,4 @@
 - [2026-11-12] [api][db] — eliminado PATCH /reports/{id}/status, el middleware admin y users.is_admin: el estado solo cambia por votos
 - [2026-11-12] [api] — eliminadas rutas sin uso y sin control de roles: GET /users y POST/PUT/DELETE /categories
 - [2026-11-12] [db] — título de tienda "Leyenda de San Miguel" renombrado a "Leyenda ciudadana" (sin referencia a una ciudad)
+- [2026-11-13] [api] — panel web /admin/users (HTTP Basic con ADMIN_USER/ADMIN_PASSWORD): lista y búsqueda de usuarios y formulario para sumarles puntos
