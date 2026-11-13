@@ -1047,3 +1047,40 @@ Vista web (Blade, no JSON) en `/admin/users`. No hay roles en `users`, así que 
 ### TODOs / Próximos pasos
 - [ ] Definir `ADMIN_USER` y `ADMIN_PASSWORD` en el `.env` del servidor para activar el panel
 - [ ] Si hace falta historial visible de puntos manuales, crear tabla `manual_score_awards` (hoy solo queda en el log)
+
+## [2026-11-13] Panel admin: poner un pin (reporte) en cualquier punto del mapa
+
+Vista web con mapa (Leaflet + OpenStreetMap) para crear reportes en cualquier coordenada y a nombre de cualquier usuario. Usa la misma protección HTTP Basic que `/admin/users`. Se agregó un menú (`Usuarios` / `Poner pin`) en las dos vistas del panel.
+
+### Ruta: [GET] /admin/reports/create
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | GET |
+| Auth        | HTTP Basic (`ADMIN_USER` / `ADMIN_PASSWORD`) |
+| Body        | N/A |
+| Respuesta   | HTML: mapa centrado en San Miguel (13.4833, -88.1833) y formulario. Clic en el mapa = pin (se puede arrastrar); también se pueden escribir lat/lng |
+| Estado      | [x] lista |
+| Notas       | Lista solo categorías activas y todos los usuarios ordenados por nombre. Leaflet 1.9.4 por cdnjs |
+
+### Ruta: [POST] /admin/reports
+
+| Campo        | Detalle |
+|-------------|---------|
+| Método      | POST (multipart, con CSRF) |
+| Auth        | HTTP Basic (`ADMIN_USER` / `ADMIN_PASSWORD`) |
+| Body        | `{ user_id: int, category_id: int, latitude: -90..90, longitude: -180..180, description: string(≤500), photo?: image(≤5MB) }` |
+| Respuesta   | Redirect al formulario con mensaje `Pin creado: reporte #id` y el mapa centrado en el último pin |
+| Estado      | [x] lista |
+| Notas       | Igual que `POST /api/reports`: estado `pending`, evento `ReportCreated` y push con `NotificationService`. Registra `admin.create_report` en el log |
+
+### Archivos tocados
+- `src/routes/web.php` — rutas `admin.reports.create` y `admin.reports.store`
+- `src/app/Http/Controllers/Admin/ReportPinController.php` — nuevo
+- `src/resources/views/admin/report-create.blade.php` — nueva vista con mapa
+- `src/resources/views/admin/_nav.blade.php` — nuevo menú del panel; incluido también en `admin/users.blade.php`
+- `src/tests/Feature/AdminReportPinTest.php` — nuevo (3 tests)
+
+### TODOs / Próximos pasos
+- [ ] Si la lista de usuarios crece mucho (miles), cambiar el `<select>` de autor por un buscador
+- [ ] Mostrar en el mapa los reportes activos existentes para no duplicar pines

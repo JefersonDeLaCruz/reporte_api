@@ -43,6 +43,7 @@
 </head>
 <body>
 <div class="container">
+    @include('admin._nav')
     <h1>Usuarios</h1>
     <p class="sub">Sumar puntos sube <strong>score</strong> (nivel) y <strong>coins</strong> (saldo de la tienda), igual que los premios por votos.</p>
 
